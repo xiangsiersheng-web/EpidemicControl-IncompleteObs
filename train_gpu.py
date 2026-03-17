@@ -73,9 +73,6 @@ def build_tensorboard_path(args):
     # 城市等信息
     writepath += args.city + args.timenow + str(args.experiment_idx) + "_" + args.R0
 
-    if args.use_asymmetric:
-        writepath += "_asymmetric"
-
     if os.path.exists(writepath): shutil.rmtree(writepath)
 
     return writepath

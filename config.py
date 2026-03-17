@@ -48,7 +48,6 @@ parser.add_argument("--local_obs_dim", type=int, default=int(2), help="local sta
 parser.add_argument("--action_dim", type=int, default=int(10), help="action dimension")
 parser.add_argument("--zone_num", type=int, default=74, help="zone_num")
 parser.add_argument("--WINDOW_SIZE", type=int, default=7, help="window_size")
-parser.add_argument("--use_asymmetric", type=bool, default=False, help="use_asymmetric")
 parser.add_argument("--state_standard_scale", type=int, default=1e4, help="state_normalized_scale")
 # 状态中是否包含beta,action,toJ
 parser.add_argument("--state_contain_beta", type=bool, default=False, help="state_include_beta")

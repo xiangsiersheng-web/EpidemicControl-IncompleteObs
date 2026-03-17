@@ -121,8 +121,6 @@ class PPO_discrete:
             self.directory += args.timenow # 因为beta的变化难以表述，为了区分，就加上了时间戳
         else:
             self.directory = "./model/{}/{}_{}".format(args.R0, args.city, args.experiment_idx)
-        if args.use_asymmetric:
-            self.directory += "_asymmetric"
         if args.max_train_steps != 1.2e6:
             self.directory += "_maxtrainsteps=" + str(args.max_train_steps)
         # 检查目录是否存在，如果不存在则创建
@@ -296,61 +294,6 @@ class PPO_discrete:
             lr_now = self.lr_decay(total_steps)
 
         return -torch.min(surr1, surr2).mean(), critic_loss, dist_entropy.mean(), lr_now
-
-    def update_asymmetric(self, replay_buffer, total_steps):
-        s, s_noise, a, a_logprob, r, s_, s_noise_, dw, done = replay_buffer.numpy_to_tensor()
-        # 计算 GAE，是基于 critic 网络计算的，使用真实s
-        # 计算 GAE，是基于 critic 网络计算的
-        adv, v_target = self.calculate_gae(s, s_, r, dw, done)
-
-        # Optimize policy for K epochs:
-        for _ in range(self.K_epochs):
-            # Random sampling and no repetition. 'False' indicates that training will continue even if the number of samples in the last time is less than mini_batch_size
-            for index in BatchSampler(SubsetRandomSampler(range(self.batch_size)), self.mini_batch_size, False):
-                ## 这时的actor网络应该还未更新，新算出的probs和存储的probs应该是一样的吧？
-                ## 首次进入该循环时，actor网络未更新，但之后的循环，actor是已经更新过的了
-                probs = self.actor(s_noise[index])
-                split_probs = probs
-                # split_probs = torch.split(probs, [self.action_dim] * self.zone_num, dim=-1)
-
-                dist_now = [Categorical(probs=torch.softmax(prob, dim=-1)) for prob in split_probs]
-
-                a_logprob_now = torch.stack(
-                    [categorical.log_prob(a) for a, categorical in zip(a[index].T, dist_now)]).sum(0).view(-1, 1)
-                dist_entropy = torch.stack([categorical.entropy() for categorical in dist_now]).sum(0).view(-1, 1)
-
-                # a/b=exp(log(a)-log(b))
-
-                ratios = torch.exp(a_logprob_now - a_logprob[index])  # shape(mini_batch_size X 1)
-
-                surr1 = ratios * adv[index]  # Only calculate the gradient of 'a_logprob_now' in ratios
-                surr2 = torch.clamp(ratios, 1 - self.epsilon, 1 + self.epsilon) * adv[index]
-                # actor损失函数考虑了最小化负的熵，也即最大化熵，可以增加探索（最大化熵，会使动作倾向于均匀分布）
-                # TODO： 这个熵的系数是否也应该衰减？
-                actor_loss = -torch.min(surr1,
-                                        surr2) - self.entropy_coef * dist_entropy  # shape(mini_batch_size X 1)
-
-                # Update actor
-                self.optimizer_actor.zero_grad()
-                actor_loss.mean().backward()
-                if self.use_grad_clip:  # Trick 7: Gradient clip
-                    torch.nn.utils.clip_grad_norm_(self.actor.parameters(), 0.5)  # 梯度范数不大于0.5
-                self.optimizer_actor.step()
-
-                v_s = self.critic(s[index])
-                critic_loss = F.mse_loss(v_target[index], v_s)  # 均方误差作为损失函数
-                # Update critic
-                self.optimizer_critic.zero_grad()
-                critic_loss.backward()
-                if self.use_grad_clip:  # Trick 7: Gradient clip
-                    torch.nn.utils.clip_grad_norm_(self.critic.parameters(), 0.5)
-                self.optimizer_critic.step()
-
-        if self.use_lr_decay:  # Trick 6:learning rate Decay
-            lr_now = self.lr_decay(total_steps)
-
-        return -torch.min(surr1, surr2).mean(), critic_loss, dist_entropy.mean(), lr_now
-
 
     def lr_decay(self, total_steps):
         """学习率衰减"""

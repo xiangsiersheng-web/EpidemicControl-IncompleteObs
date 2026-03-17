@@ -1,2 +1,0 @@
-“merge_population.xlsx”存储了newid和objectid的对应关系
-pop和flow目前都是0-642，对应的newid为1-643，进而对应到1-673的objectid，就和shp文件对应上了
