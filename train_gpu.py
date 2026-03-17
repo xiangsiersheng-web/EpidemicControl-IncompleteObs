@@ -2,7 +2,6 @@ import torch
 import numpy as np
 import pandas as pd
 
-from algorithm.behavioral_clone.expert_policy import ExpertPolicy
 from utils.normalization import Normalization, RewardScaling
 from utils.replaybuffer_tensor import ReplayBufferTensor
 from algorithm.ppo_discrete_gpu import PPO_discrete_gpu
@@ -101,7 +100,6 @@ def evaluate_policy(args, env, agent, state_norm=None, evaluate_num=0,
         if args.use_state_norm:  # During the evaluating,update=False
             s = state_norm(s, update=False)
         a = agent.evaluate(s)  # We use the deterministic policy during the evaluating
-        # a = args.expert_policy.choose_action(s)
         s_, r, done, info = env.step(a)
         if evaluate_num > START_TRAIN_DL or evaluate_num == -1:
             s_ = generic_predictor.predict(env=env, s=s_)  # 根据env的状态进行一个预测
@@ -137,7 +135,6 @@ def my_test(args, seed=3047, env_count = 10):
     args.env_count = env_count
     eval_env = EpidemicModel(args, env_count, is_evaluation=True)
     eval_env.seed(seed)
-    args.expert_policy = ExpertPolicy(args, eval_env)
     agent = PPO_discrete_gpu(args)
     agent.load(model_idx)
     args.eval_fig_dir = agent.directory + '/' + str(model_idx)
@@ -180,9 +177,6 @@ def main(args, seed = 3047):
     assert args.batch_size == args.env_count * args.ODE_period, "batch_size != env_count * ODE_period, 维度不匹配！"
     env = EpidemicModel(args, env_count=args.env_count)
     env_evaluate = EpidemicModel(args, env_count=args.env_count, is_evaluation=True)
-
-    # 初始化专家策略
-    args.expert_policy = ExpertPolicy(args, env)
 
     # 设置随机种子，使得训练可以复现
     np.random.seed(seed)

@@ -68,81 +68,6 @@ class PPO_discrete_gpu:
             self.optimizer_actor = torch.optim.Adam(self.actor.parameters(), lr=self.lr_a)
             self.optimizer_critic = torch.optim.Adam(self.critic.parameters(), lr=self.lr_c)
 
-        # 是否使用克隆学习
-        if args.use_bc_init:
-            flatten = True
-            if args.actor_critic_model == "lstm" or args.actor_critic_model == "gru":
-                flatten = False
-            self._behavioral_clone_init(flatten)
-        self.actor_contain_bc_loss = False if "actor_contain_bc_loss" not in args_dict else args.actor_contain_bc_loss # 策略网络中是否包含克隆学习的损失
-        self.bc_loss_weight = 1.0 if "bc_loss_weight" not in args_dict else args.bc_loss_weight
-        if self.actor_contain_bc_loss:
-            assert args.expert_policy is not None, "Please set expert_policy in args"
-            self.expert_policy = args.expert_policy
-
-
-    def _behavioral_clone_init(self, flatten = True):
-        """读取专家数据，初始化策略网络"""
-        print("Reload expert data, init policy network.")
-        expert_data_path = './algorithm/behavioral_clone/expert_data.pth'
-        device = self.device  # 获取设备信息
-
-        # 1. 加载专家数据
-        try:
-            data = torch.load(expert_data_path, map_location=device)
-            expert_states = data['states']  # 形状：(total_samples, WINDOW_SIZE, zone_num)
-            expert_actions = data['actions']  # 形状：(total_samples, zone_num)
-            print(f"Expert data loaded. Total samples: {expert_states.shape[0]}")
-        except FileNotFoundError:
-            print(f"Expert data not found at {expert_data_path}")
-            return
-
-        # 状态是否需要展平
-        if flatten:
-            expert_states = expert_states.view(expert_states.shape[0], -1) # (total_samples, WINDOW_SIZE * zone_num)
-
-        # 确保数据在正确的设备上
-        expert_states = expert_states.to(device)
-        expert_actions = expert_actions.to(device)
-
-        # 2. 创建数据集和数据加载器
-        dataset = torch.utils.data.TensorDataset(expert_states, expert_actions)
-        batch_size = 256  # 可以根据需要调整
-        dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
-
-        # 3. 定义损失函数和优化器
-        criterion = nn.CrossEntropyLoss()
-        optimizer = torch.optim.Adam(self.actor.parameters(), lr=self.lr_a)
-
-        # 4. 训练 actor 网络
-        num_epochs = 10  # TODO:可以根据需要调整
-        self.actor.train()  # 设置为训练模式
-        for epoch in range(num_epochs):
-            total_loss = 0
-            for states_batch, actions_batch in dataloader:
-                optimizer.zero_grad()
-
-                # 前向传播
-                logits = self.actor(states_batch)  # logits 是一个列表，长度为 zone_num，每个元素形状为 [batch_size, action_dim]
-
-                # 计算损失
-                bc_loss = 0
-                for i in range(self.zone_num):
-                    # 对于每个区域，计算交叉熵损失
-                    # actions_batch[:, i] 的形状为 [batch_size]
-                    # logits[i] 的形状为 [batch_size, action_dim]
-                    bc_loss += criterion(logits[i], actions_batch[:, i])
-
-                # 反向传播和优化
-                bc_loss.backward()
-                optimizer.step()
-
-                total_loss += bc_loss.item()
-
-            avg_loss = total_loss / len(dataloader)
-            print(f"Epoch [{epoch+1}/{num_epochs}], Behavior Cloning Loss: {avg_loss:.4f}")
-
-        print("Behavior cloning pre-training completed.")
 
     def _build_directory(self, args):
         base_path = "model/gpu/"
@@ -246,33 +171,6 @@ class PPO_discrete_gpu:
             adv = (adv - adv.mean()) / (adv.std() + 1e-8)
 
         return adv, v_target
-
-    def _calculate_bc_loss(self, s):
-        """计算行为克隆损失（BC Loss）
-
-        :param s: 状态张量，形状为 (batch_size, WINDOW_SIZE * zone_num) 或 (batch_size, WINDOW_SIZE, zone_num)
-        :param a: 动作张量，形状为 (batch_size, zone_num)
-        :return: 标量，表示行为克隆损失
-        """
-        # 获取专家策略在状态 s 下的动作
-        exp_a = self.expert_policy.choose_action(s)  # exp_a 的形状为 [batch_size, zone_num]
-
-        # 获取当前策略的 logits
-        logits = self.actor(s)  # logits 是一个列表，长度为 zone_num，每个元素形状为 [batch_size, action_dim]
-
-        # 定义交叉熵损失函数
-        criterion = nn.CrossEntropyLoss()
-
-        # 计算每个区域的交叉熵损失，并求平均
-        bc_loss = 0
-        for i in range(self.zone_num):
-            # logits[i]: [batch_size, action_dim]
-            # exp_a[:, i]: [batch_size]
-            bc_loss += criterion(logits[i], exp_a[:, i])
-
-        return bc_loss
-
-
 
     def update(self, replay_buffer, total_steps):
         """

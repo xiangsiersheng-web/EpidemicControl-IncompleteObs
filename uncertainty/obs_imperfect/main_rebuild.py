@@ -236,7 +236,6 @@ def test(trainer, args, agent, state_norm):
         a = agent.evaluate(s)
         # a, _ = agent.choose_action(s)  # 抽样动作
         # a = torch.randint(0, env.action_dim, (env.env_count, env.ZONE_NUM), device=env.device)
-        # a = args.expert_policy.choose_action(s)
 
         s_, r, done, _ = env.step(a)
 

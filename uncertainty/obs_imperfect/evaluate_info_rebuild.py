@@ -11,7 +11,6 @@ import os
 
 from uncertainty.obs_imperfect.main_rebuild import _get_history_padding
 from utils.normalization import Normalization, RewardScaling
-from algorithm.behavioral_clone.expert_policy import ExpertPolicy
 from algorithm.ppo_discrete_gpu import PPO_discrete_gpu
 from environment.uncertain_seir_vector_v4 import EpidemicModel, action_to_u0, action_to_u1
 from uncertainty.obs_imperfect.gru_gnn_model import RebuildGruGNNModel, RebuildGruGNN

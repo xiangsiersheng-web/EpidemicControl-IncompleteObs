@@ -50,7 +50,6 @@ parser.add_argument("--zone_num", type=int, default=74, help="zone_num")
 parser.add_argument("--WINDOW_SIZE", type=int, default=7, help="window_size")
 parser.add_argument("--use_asymmetric", type=bool, default=False, help="use_asymmetric")
 parser.add_argument("--state_standard_scale", type=int, default=1e4, help="state_normalized_scale")
-parser.add_argument("--use_bc_init", type=bool, default=False, help="use_bc_init")
 # 状态中是否包含beta,action,toJ
 parser.add_argument("--state_contain_beta", type=bool, default=False, help="state_include_beta")
 parser.add_argument("--state_contain_action", type=bool, default=False, help="state_include_action")
