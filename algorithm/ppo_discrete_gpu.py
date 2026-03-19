@@ -1,5 +1,5 @@
 # -*- ecoding: utf-8 -*-
-# @ModuleName: ppo_discrete
+# @ModuleName: ppo_discrete_gpu
 # @Function: 
 #  
 # @Time: 2024/9/30 14:20
