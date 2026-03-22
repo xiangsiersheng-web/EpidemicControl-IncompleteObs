@@ -1,7 +1,6 @@
 /logs/
 /runs/
 *.log
-*.npy
 *.zip
 
 /__pycache__/
