@@ -17,8 +17,8 @@ config = {
  "mathtext.fontset": "stix",
 }
 plt.rcParams.update(config)
-# plt.rcParams['font.sans-serif'] = ['Arial Unicode MS']  # 设置中文字体
-# plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
+# plt.rcParams['font.sans-serif'] = ['Arial Unicode MS']  # Set Chinese font
+# plt.rcParams['axes.unicode_minus'] = False  # Solve minus display issue
 
 light_blue = '#ADD8E6'    # Light Blue
 sky_blue = '#87CEEB'      # Sky Blue
@@ -39,7 +39,7 @@ def plot_state_obs_action(state, obs, action, region_idx, output_path= None, is_
     a = action[0, :(DAY+1), region_idx]
     p_test, _ = env._action_to_u(a)
 
-    # 绘图
+    # Plot
     plt.figure(dpi=120, figsize=(7, 5))
     plt.grid(linestyle='-.', axis='both')
 
@@ -51,7 +51,7 @@ def plot_state_obs_action(state, obs, action, region_idx, output_path= None, is_
     plt.xlim(0, DAY)
     plt.xticks(range(0, DAY + 1, 5))
     plt.ylim(0)
-    # y轴刻度最多显示一位小数
+    # y-axis ticks show at most one decimal place
     ax = plt.gca()
     ax.yaxis.set_major_formatter(ticker.FormatStrFormatter('%.1f'))
     plt.legend(fontsize=16, loc='upper left')
@@ -61,7 +61,7 @@ def plot_state_obs_action(state, obs, action, region_idx, output_path= None, is_
 
     plt.twinx()
 
-    # 绘制两类动作的变化曲线
+    # Plot two types of action change curves
     plt.plot(p_test.cpu().numpy(), label=r"Test level", linewidth=2, linestyle='--', color='green')
     plt.ylim(0, )
 
@@ -86,7 +86,7 @@ def plot_state_rebuild_action(state, rebuild, action, region_idx, output_path= N
     a = action[0, :(DAY + 1), region_idx]
     p_test, _ = env._action_to_u(a)
 
-    # 绘图
+    # Plot
     plt.figure(dpi=120, figsize=(7, 5))
     plt.grid(linestyle='-.', axis='both')
 
@@ -98,7 +98,7 @@ def plot_state_rebuild_action(state, rebuild, action, region_idx, output_path= N
     plt.xticks(range(0, DAY + 1, 5))
     plt.ylim(0)
     if reb.min() < 1:
-        # y轴刻度最多显示一位小数
+        # y-axis ticks show at most one decimal place
         ax = plt.gca()
         ax.yaxis.set_major_formatter(ticker.FormatStrFormatter('%.1f'))
 
@@ -108,7 +108,7 @@ def plot_state_rebuild_action(state, rebuild, action, region_idx, output_path= N
 
     plt.twinx()
 
-    # 绘制两类动作的变化曲线
+    # Plot two types of action change curves
     plt.plot(p_test.cpu().numpy(), label=r"Test Level", linewidth=2, linestyle='--', color='green')
     plt.ylim(0, )
     plt.legend(fontsize=16, loc='upper right')
@@ -147,9 +147,9 @@ if __name__ == '__main__':
         rmse1 = plot_state_obs_action(state1, obs1, action1, region_idx=i)
         rmse2 = plot_state_rebuild_action(state2, rebuild2, action2, region_idx=i)
         print(f"i={i}, rmse0={rmse0}, rmse1={rmse1}, rmse2={rmse2}")
-        # 该区域的人口，对角线 流动紧密的几个区域
+        # Population of this region, diagonal, several closely connected regions
         column = OD[:, i]
-        # 输出column最大的5个值以及索引
+        # Output top 5 largest values and indices of column
         print(f"i={i}, pop={POP[i]}, topk: {column.topk(5)}")
         print()
 
@@ -162,8 +162,8 @@ if __name__ == '__main__':
         rmse1 = plot_state_obs_action(state1, obs1, action1, region_idx=i, output_path=f"output_fig/region_{i}/partial_observable.png")
         rmse2 = plot_state_rebuild_action(state2, rebuild2, action2, region_idx=i, output_path=f"output_fig/region_{i}/rebuild_info.png")
         print(f"i={i}, rmse0={rmse0}, rmse1={rmse1}, rmse2={rmse2}")
-        # 该区域的人口，对角线 流动紧密的几个区域
+        # Population of this region, diagonal, several closely connected regions
         column = OD[:, i]
-        # 输出column最大的5个值以及索引
+        # Output top 5 largest values and indices of column
         print(f"i={i}, pop={POP[i]}, topk: {column.topk(5)}")
         print()

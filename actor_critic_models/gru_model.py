@@ -8,19 +8,17 @@ def orthogonal_init(layer, gain=1.0):
     nn.init.constant_(layer.bias, 0)
 
 def orthogonal_init_gru(gru_layer, gain=1):
-    """
-    正交初始化 GRU 层的权重。
-    """
-    # 初始化输入到隐藏层权重
+    """Orthogonal initialization for GRU layer weights."""
+    # Initialize input to hidden layer weights
     init.orthogonal_(gru_layer.weight_ih_l0, gain=gain)
     init.orthogonal_(gru_layer.weight_hh_l0, gain=gain)
 
-    # 如果 GRU 是双向的，初始化反向层的权重
+    # If GRU is bidirectional, initialize reverse layer weights
     if gru_layer.bidirectional:
         init.orthogonal_(gru_layer.weight_ih_l0_reverse, gain=gain)
         init.orthogonal_(gru_layer.weight_hh_l0_reverse, gain=gain)
 
-    # 初始化偏置
+    # Initialize biases
     if gru_layer.bias:
         init.zeros_(gru_layer.bias_ih_l0)
         init.zeros_(gru_layer.bias_hh_l0)
@@ -31,21 +29,10 @@ def orthogonal_init_gru(gru_layer, gain=1):
 
 class ActorGRU(nn.Module):
     """
-    Actor 网络，基于 GRU 处理时间序列数据并输出动作概率分布。
-
-    网络结构：
-    1. 输入层：状态输入，形状为 (B, L, M, H)
-        - B: 批量大小 (batch size)
-        - L: 时间序列长度 (WINDOW_SIZE)
-        - M: 区域数量 (zone_num)
-        - H: 每个区域的特征维度 (local_obs_dim)
-    2. 预处理层 (pre_fc)：将输入特征映射到 GRU 的输入维度。
-    3. GRU 层：提取时间序列的动态特征。
-    4. 全连接隐藏层 (fc1)：将 GRU 输出进一步映射到高维空间。
-    5. 输出层 (fc2)：生成每个区域的动作概率分布，输出形状为 (B, M, action_dim)。
-
-    前向传播：
-    - 接收输入状态张量 s，经过预处理、GRU 和全连接层，输出各区域动作概率分布。
+    Actor network using GRU for sequential data processing.
+    
+    Input: (B, L, M, H) where B=batch, L=WINDOW_SIZE, M=zone_num, H=local_obs_dim
+    Output: (B, M, action_dim) action probability distribution
     """
     def __init__(self, args):
         super(ActorGRU, self).__init__()

@@ -1,5 +1,5 @@
 """
-该类主要暴露给强化学习协同训练时使用
+This class is mainly exposed for use in reinforcement learning collaborative training
 """
 from abc import abstractmethod
 
@@ -10,7 +10,7 @@ from environment.uncertain_seir_vector_v4 import EpidemicModel
 
 class GenericPredictor:
     def __init__(self, args, model_dir = './'):
-        """初始化一个predictor"""
+        """Initialize a predictor"""
         if args.predictor_type == 'rebuild_gru_gnn_model_with_action':
             self.predictor = RebuildGruGNNPredictorV2(args, model_dir)
         elif args.predictor_type == 'rebuild_gru_gnn_model_no_action':
@@ -40,35 +40,35 @@ class GenericPredictor:
 
 def _get_history_padding(datas, day, window_size):
     """
-    获取填充后的历史窗口数据。
+    Get padded history window data.
 
-    当天数（day）大于或等于窗口大小（window_size）时，截取最近的 `window_size` 天的数据。
-    当天数小于窗口大小时，在时间维度前端填充零，以确保返回的窗口大小为 `window_size`。
+    When day is greater than or equal to window_size, extract the most recent `window_size` days of data.
+    When day is less than window_size, pad zeros at the front of the time dimension to ensure the returned window size is `window_size`.
 
-    参数:
-        datas (torch.Tensor): 输入的观测数据，形状为 (env_count, total_days, ZONE_NUM)。
-        day (int): 当前的天数（时间步），从1开始。
-        window_size (int): 窗口大小，表示需要回溯的天数。
+    Args:
+        datas (torch.Tensor): Input observation data, shape (env_count, total_days, ZONE_NUM).
+        day (int): Current day (timestep), starting from 1.
+        window_size (int): Window size, indicating the number of days to look back.
 
-    返回:
-        torch.Tensor: 填充后的窗口数据，形状为 (env_count, window_size, ZONE_NUM)。
+    Returns:
+        torch.Tensor: Padded window data, shape (env_count, window_size, ZONE_NUM).
 
-    注意：
-        返回的数据不包含索引为 day 的数据
+    Note:
+        The returned data does not include data at index day
     """
     if day >= window_size:
-        # 获取最近的 `window_size` 天的数据
-        window = datas[:, (day - window_size):day, :]  # 假设第3个特征是需要的观测值
+        # Get the most recent `window_size` days of data
+        window = datas[:, (day - window_size):day, :]  # Assume the 3rd feature is the needed observation
     else:
-        # 计算需要填充的天数
+        # Calculate the number of days to pad
         padding = window_size - day
-        # 获取已有的天数的数据
-        current_data = datas[:, :day, :]  # 形状: (env_count, day, ZONE_NUM)
-        # 在时间维度前端填充零
+        # Get the available days of data
+        current_data = datas[:, :day, :]  # shape: (env_count, day, ZONE_NUM)
+        # Pad zeros at the front of the time dimension
         pad = [0] * 2 * len(current_data.shape)
         pad[-4] = padding
         pad = tuple(pad)
-        window = torch.nn.functional.pad(current_data, pad, "constant", 0)  # 形状: (env_count, window_size, ZONE_NUM)
+        window = torch.nn.functional.pad(current_data, pad, "constant", 0)  # shape: (env_count, window_size, ZONE_NUM)
 
     return window
 
@@ -88,11 +88,11 @@ class BasePredictor:
         pass
 
     def _get_dataset(self, env):
-        # 1.不完全观测
+        # 1. Incomplete observation
         imperfect_obs = env.history_local_obs[:, :, :, :2] * env.POP.unsqueeze(1).unsqueeze(-1)  # (env_count, period + 1, ZONE_NUM, 2)
-        # 2.动作
+        # 2. Actions
         history_action = env.actions  # (env_count, period + 1, ZONE_NUM)
-        # 3.真实（现存，新增）
+        # 3. True (current, new)
         curr_EI = env.simRes[:, :, :,[env.E_undetected, env.E_detected, env.I_undetected, env.I_detected, env.I_reported]].sum(dim=-1)
         new_EI = env.daily_new_E  # (env_count, period + 1, ZONE_NUM)
         true_state = torch.stack([curr_EI, new_EI], dim=-1)  # (env_count, period + 1, ZONE_NUM, 2)
@@ -103,11 +103,11 @@ class BasePredictor:
             'true_state': true_state,
         }
 
-        print("数据集已生成：\t imperfect_obs:", imperfect_obs.shape,
+        print("Dataset generated:\t imperfect_obs:", imperfect_obs.shape,
               "\t history_action:", history_action.shape,
               "\t true_state:", true_state.shape)
-        print("数据集中的：\t", "观测：实际数值（未除以POP） \t", "动作：动作下标 \t",
-              "真实状态：预测目标，实际数值（未除以POP） ")
+        print("In dataset:\t", "Observation: actual values (not divided by POP) \t", "Action: action indices \t",
+              "True state: prediction target, actual values (not divided by POP) ")
 
         return dataset
 
@@ -127,11 +127,11 @@ class BasePredictor:
         total_EI = rebuild_states[:, :, :, 0].sum(dim=2).mean(dim=0)
         new_EI = rebuild_states[:, :, :, 1].sum(dim=2).mean(dim=0)
 
-        # 绘制曲线
+        # Plot curves
         plt.plot(total_EI.cpu().numpy(), label="Total EI(avg)", color='red', linestyle='-', linewidth=2)
         plt.plot(new_EI.cpu().numpy(), label="New EI(avg)", color='orange', linestyle='--', linewidth=2)
 
-        # 添加图例
+        # Add legend
         plt.legend(loc='upper right', fontsize=10)
 
         plt.title(title)
@@ -141,7 +141,7 @@ class BasePredictor:
 
 class RebuildGruGNNPredictorV2(BasePredictor):
     """
-    使用ODE-GCN-GRU预测，V2包含动作
+    Use ODE-GCN-GRU for prediction, V2 includes actions
     """
     def __init__(self, args, model_dir = './'):
         super().__init__(args, model_dir)
@@ -152,7 +152,7 @@ class RebuildGruGNNPredictorV2(BasePredictor):
         num_layers = 2
         env_temp = EpidemicModel(args, env_count=1)
 
-        # 初始化模型
+        # Initialize model
         model = RebuildGruGNNModel(gru_hidden_size=hidden_size, mlp_output_size=output_size, gru_num_layers=num_layers,
                                    env=env_temp, device_name=args.device_name, node_output_size=32)
         self.trainer = RebuildGruGNN(model=model, device_name=args.device_name, seq_len=self.seq_len, env=env_temp)
@@ -162,16 +162,16 @@ class RebuildGruGNNPredictorV2(BasePredictor):
         self.model_path = model_dir + f"/{args.predictor_type}.pth"
 
     def predict(self, env, s):
-        """根据观测和动作调用trainer预测"""
+        """Call trainer to predict based on observations and actions"""
         if env.day == 1:
             torch.fill(self.rebuild_states, 0)
         if not hasattr(self, 'POP'):
             self.POP = env.POP.clone()
-        # 获取 obs 和 actions
+        # Get obs and actions
         history_action = _get_history_padding(env.actions, env.day - 1, self.seq_len)
         obs = _get_history_padding(env.history_local_obs[:, :, :, :2], env.day, self.seq_len) * env.POP.unsqueeze(
             1).unsqueeze(-1)
-        # 重建信息
+        # Rebuild information
         pre = self.trainer.predict(obs, history_action)
         pre = torch.clip(pre, min=0)
         self.rebuild_states[:, env.day - 1, :, :] = (pre / self.POP.unsqueeze(-1))
@@ -180,18 +180,18 @@ class RebuildGruGNNPredictorV2(BasePredictor):
         return r_s
 
     def train(self, env):
-        """根据env获取数据集，训练trainer"""
-        print("开始训练...")
-        # self.trainer.model.reset_top_layer()    # 重置模型
-        # self.trainer.model.reset_all_layers()   # 重置模型
+        """Get dataset from env and train trainer"""
+        print("Start training...")
+        # self.trainer.model.reset_top_layer()    # Reset model
+        # self.trainer.model.reset_all_layers()   # Reset model
         start_time = time.time()
-        # 从env中构造数据集
+        # Construct dataset from env
         dataset = self._get_dataset(env)
         self.trainer.train(dataset, num_epochs=50, batch_size=64, patience=5)
-        print(f"训练结束，耗时：{time.time() - start_time:.2f} 秒")
+        print(f"Training completed, time elapsed: {time.time() - start_time:.2f} seconds")
 
     def render(self, title):
-        """将重建的状态绘制出来"""
+        """Plot the rebuilt states"""
         if not hasattr(self, 'POP'):
             self._plot_rebuild_state(self.rebuild_states, title=title)
         else:
@@ -199,17 +199,17 @@ class RebuildGruGNNPredictorV2(BasePredictor):
 
     def save(self, idx):
         model_path = self.model_path.replace('.pth', f"_{idx}.pth")
-        print(f"开始保存DL模型: {model_path}")
+        print(f"Start saving DL model: {model_path}")
         self.trainer.save(model_path)
 
     def load(self, idx):
         model_path = self.model_path.replace('.pth', f"_{idx}.pth")
-        print(f"开始加载DL模型: {model_path}")
+        print(f"Start loading DL model: {model_path}")
         self.trainer.load(model_path)
 
 class RebuildGruGNNPredictorV1(BasePredictor):
     """
-    使用ODE-GCN-GRU预测，V1不包含动作
+    Use ODE-GCN-GRU for prediction, V1 does not include actions
     """
     def __init__(self, args, model_dir = './'):
         super().__init__(args, model_dir)
@@ -220,7 +220,7 @@ class RebuildGruGNNPredictorV1(BasePredictor):
         num_layers = 2
         env_temp = EpidemicModel(args, env_count=1)
 
-        # 初始化模型
+        # Initialize model
         model = RebuildGruGNNModel(gru_hidden_size=hidden_size, mlp_output_size=output_size, gru_num_layers=num_layers,
                                    env=env_temp, device_name=args.device_name)
         self.trainer = RebuildGruGNN(model=model, device_name=args.device_name, seq_len=self.seq_len)
@@ -230,16 +230,16 @@ class RebuildGruGNNPredictorV1(BasePredictor):
         self.model_path = model_dir + f"/{args.predictor_type}.pth"
 
     def predict(self, env, s):
-        """根据观测和动作调用trainer预测"""
+        """Call trainer to predict based on observations and actions"""
         if env.day == 1:
             torch.fill(self.rebuild_states, 0)
         if not hasattr(self, 'POP'):
             self.POP = env.POP.clone()
-        # 获取 obs 和 actions
+        # Get obs and actions
         history_action = _get_history_padding(env.actions, env.day - 1, self.seq_len)
         obs = _get_history_padding(env.history_local_obs[:, :, :, :2], env.day, self.seq_len) * env.POP.unsqueeze(
             1).unsqueeze(-1)
-        # 重建信息
+        # Rebuild information
         pre = self.trainer.predict(obs, history_action)
         pre = torch.clip(pre, min=0)
         self.rebuild_states[:, env.day - 1, :, :] = (pre / self.POP.unsqueeze(-1))
@@ -248,16 +248,16 @@ class RebuildGruGNNPredictorV1(BasePredictor):
         return r_s
 
     def train(self, env):
-        """根据env获取数据集，训练trainer"""
-        print("开始训练...")
+        """Get dataset from env and train trainer"""
+        print("Start training...")
         start_time = time.time()
-        # 从env中构造数据集
+        # Construct dataset from env
         dataset = self._get_dataset(env)
         self.trainer.train(dataset, num_epochs=50, batch_size=64, patience=5)
-        print(f"训练结束，耗时：{time.time() - start_time:.2f} 秒")
+        print(f"Training completed, time elapsed: {time.time() - start_time:.2f} seconds")
 
     def render(self, title):
-        """将重建的状态绘制出来"""
+        """Plot the rebuilt states"""
         if not hasattr(self, 'POP'):
             self._plot_rebuild_state(self.rebuild_states, title=title)
         else:
@@ -265,12 +265,12 @@ class RebuildGruGNNPredictorV1(BasePredictor):
 
     def save(self, idx):
         model_path = self.model_path.replace('.pth', f"_{idx}.pth")
-        print(f"开始保存DL模型: {model_path}")
+        print(f"Start saving DL model: {model_path}")
         self.trainer.save(model_path)
 
     def load(self, idx):
         model_path = self.model_path.replace('.pth', f"_{idx}.pth")
-        print(f"开始加载DL模型: {model_path}")
+        print(f"Start loading DL model: {model_path}")
         self.trainer.load(model_path)
 
 class NoPredictionPredictor(BasePredictor):

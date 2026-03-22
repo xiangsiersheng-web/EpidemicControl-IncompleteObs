@@ -20,8 +20,8 @@ from matplotlib import rcParams
 import warnings
 
 warnings.filterwarnings("ignore")
-plt.rcParams['font.sans-serif'] = ['Arial Unicode MS']  # 设置中文字体
-plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
+plt.rcParams['font.sans-serif'] = ['Arial Unicode MS']  # Set Chinese font
+plt.rcParams['axes.unicode_minus'] = False  # Fix minus sign display issue
 
 config = {
     "font.family": "serif",
@@ -56,7 +56,7 @@ simResArr.append(simRes)
 # simRes = np.load(f"../res/model_sz_1_100_high_simRes.npy")
 # simResArr.append(simRes)
 
-# 画2*2组图的，但是这个组图不太好用ppt加文字
+# Plot 2*2 grouped figures, but this grouping is not convenient for adding text in ppt
 def baselines(version='old'):
     fig, axes = plt.subplots(2, 2, figsize=(8, 7), dpi=200)
     lables = ['a', 'b', 'c', 'd']
@@ -96,7 +96,7 @@ def baselines(version='old'):
 
 # baselines(version='new')
 
-# 单独画 然后ppt组合
+# Plot separately then combine in ppt
 def baseline(index=0):
     fig, ax = plt.subplots(1, 1, figsize=(4, 3.6), dpi=200)
 
@@ -324,7 +324,7 @@ def infection_contrast(region):
     from matplotlib.ticker import ScalarFormatter
     formatter = ScalarFormatter(useMathText=True)
     formatter.set_scientific(True)
-    formatter.set_powerlimits((-1, 4))  # 设置指数的上下界
+    formatter.set_powerlimits((-1, 4))  # Set upper and lower bounds for exponent
     ax.yaxis.set_major_formatter(formatter)
 
     plt.tight_layout()
@@ -346,10 +346,10 @@ def infection_wider():
     infection_curve = np.sum(simRes[:, :, 2], axis=1)
     ax.plot(infection_curve, label='Infection curve with DRL-Basic control', color='#EC2835', linewidth=2)
 
-    # 标出特定点
+    # Mark specific points
     points_x = [5, 15, 20, 30, 45]
-    points_y = infection_curve[points_x]  # 提取对应x值处的y值
-    ax.scatter(points_x, points_y, color='black', marker='o', s=20, zorder=5)  # 使用scatter绘制点
+    points_y = infection_curve[points_x]  # Extract y values at corresponding x positions
+    ax.scatter(points_x, points_y, color='black', marker='o', s=20, zorder=5)  # Plot points using scatter
     ax.annotate(f'Day 5', (0, points_y[0]), textcoords='offset points', xytext=(5, 10), ha='left',fontsize=7)
     ax.annotate(f'Day 15', (8, points_y[1]), textcoords='offset points', xytext=(5, 10), ha='left',fontsize=7)
     ax.annotate(f'Day 20', (15, points_y[2]), textcoords='offset points', xytext=(2, 15), ha='left',fontsize=7)
@@ -367,7 +367,7 @@ def infection_wider():
     from matplotlib.ticker import ScalarFormatter
     formatter = ScalarFormatter(useMathText=True)
     formatter.set_scientific(True)
-    formatter.set_powerlimits((-1, 4))  # 设置指数的上下界
+    formatter.set_powerlimits((-1, 4))  # Set upper and lower bounds for exponent
     ax.yaxis.set_major_formatter(formatter)
 
     plt.tight_layout()
@@ -388,10 +388,10 @@ def infection_wider_PPT():
     infection_curve = np.sum(simRes[:, :, 2], axis=1)
     ax.plot(infection_curve, label='Infection curve with DRL-Basic control', color='#EC2835', linewidth=2)
 
-    # 标出特定点
+    # Mark specific points
     points_x = [5, 15, 20, 30, 45]
-    points_y = infection_curve[points_x]  # 提取对应x值处的y值
-    ax.scatter(points_x, points_y, color='black', marker='o', s=20, zorder=5)  # 使用scatter绘制点
+    points_y = infection_curve[points_x]  # Extract y values at corresponding x positions
+    ax.scatter(points_x, points_y, color='black', marker='o', s=20, zorder=5)  # Plot points using scatter
     ax.annotate(f'Day 5', (0, points_y[0]), textcoords='offset points', xytext=(5, 10), ha='left',fontsize=10)
     ax.annotate(f'Day 15', (8, points_y[1]), textcoords='offset points', xytext=(0, 20), ha='left',fontsize=10)
     ax.annotate(f'Day 20', (15, points_y[2]), textcoords='offset points', xytext=(20, 5), ha='left',fontsize=10)
@@ -409,7 +409,7 @@ def infection_wider_PPT():
     from matplotlib.ticker import ScalarFormatter
     formatter = ScalarFormatter(useMathText=True)
     formatter.set_scientific(True)
-    formatter.set_powerlimits((-1, 4))  # 设置指数的上下界
+    formatter.set_powerlimits((-1, 4))  # Set upper and lower bounds for exponent
     ax.yaxis.set_major_formatter(formatter)
 
     plt.tight_layout()

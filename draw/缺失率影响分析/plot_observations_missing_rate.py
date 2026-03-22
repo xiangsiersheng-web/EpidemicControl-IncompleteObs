@@ -17,14 +17,14 @@ def _plot_missing_rate_predict_rmse_scatter(missing_rate_predict_rmse_table_file
                                              log_base=10,
                                              clip_min=1e-6,
                                              y_max=200,
-                                             y_min=10,  # 若为 None，则自动计算一个正的下界
-                                             output_path="./缺失率_RMSE.png"
+                                             y_min=10,  # If None, automatically calculate a positive lower bound
+                                             output_path="./missing_rate_RMSE.png"
                                              ):
     from matplotlib.ticker import LogLocator, LogFormatter
 
     df = pd.read_excel(missing_rate_predict_rmse_table_file_path).copy()
 
-    # 对数轴需要正值，先做抬升
+    # Logarithmic axis needs positive values, first apply lifting
     if y_log:
         df["predict_total_effect"] = np.where(df["predict_total_effect"] <= 0, clip_min, df["predict_total_effect"])
 
@@ -49,23 +49,23 @@ def _plot_missing_rate_predict_rmse_scatter(missing_rate_predict_rmse_table_file
     if y_log:
         ax.set_yscale('log', base=log_base)
 
-        # 自动确定下界（保证为正，且不高于上界）
+        # Automatically determine lower bound (ensure positive, not higher than upper bound)
         if y_min is None:
-            # 取本次绘图中所有点的最小正值，适度留一点空隙
+            # Take minimum positive value from all points in this plot, leave some gap
             positive_scores = df["predict_total_effect"][df["predict_total_effect"] > 0]
             y_min_auto = positive_scores.min() if not positive_scores.empty else clip_min
             y_min_auto = max(clip_min, y_min_auto * 0.9)
-            y_min_final = min(y_min_auto, y_max)  # 防止极端情况下下界超过上界
+            y_min_final = min(y_min_auto, y_max)  # Prevent lower bound from exceeding upper bound in extreme cases
         else:
             y_min_final = max(clip_min, float(y_min))
 
         ax.set_ylim(y_min_final, float(y_max))
 
-        # 对数主刻度与格式
+        # Logarithmic major ticks and format
         ax.yaxis.set_major_locator(LogLocator(base=log_base))
         ax.yaxis.set_major_formatter(LogFormatter(base=log_base))
     else:
-        # 线性坐标时也按需限制
+        # Linear coordinates also need constraints
         ax.set_ylim(float(y_min), float(y_max))
 
     plt.grid(True, linestyle="--", linewidth=0.6, alpha=0.6)
@@ -79,14 +79,14 @@ def _plot_missing_rate_score_scatter(missing_rate_score_table_file_path="",
                                      log_base=10,
                                      clip_min=1e-6,
                                      y_max=10000,
-                                     y_min=1,  # 若为 None，则自动计算一个正的下界
-                                     output_path="./缺失率_Score.png"
+                                     y_min=1,  # If None, automatically calculate a positive lower bound
+                                     output_path="./missing_rate_Score.png"
                                      ):
     from matplotlib.ticker import LogLocator, LogFormatter
 
     df = pd.read_excel(missing_rate_score_table_file_path).copy()
 
-    # 对数轴需要正值，先做抬升
+    # Logarithmic axis needs positive values, first apply lifting
     if y_log:
         df["score"] = np.where(df["score"] <= 0, clip_min, df["score"])
 
@@ -111,23 +111,23 @@ def _plot_missing_rate_score_scatter(missing_rate_score_table_file_path="",
     if y_log:
         ax.set_yscale('log', base=log_base)
 
-        # 自动确定下界（保证为正，且不高于上界）
+        # Automatically determine lower bound (ensure positive, not higher than upper bound)
         if y_min is None:
-            # 取本次绘图中所有点的最小正值，适度留一点空隙
+            # Take minimum positive value from all points in this plot, leave some gap
             positive_scores = df["score"][df["score"] > 0]
             y_min_auto = positive_scores.min() if not positive_scores.empty else clip_min
             y_min_auto = max(clip_min, y_min_auto * 0.9)
-            y_min_final = min(y_min_auto, y_max)  # 防止极端情况下下界超过上界
+            y_min_final = min(y_min_auto, y_max)  # Prevent lower bound from exceeding upper bound in extreme cases
         else:
             y_min_final = max(clip_min, float(y_min))
 
         ax.set_ylim(y_min_final, float(y_max))
 
-        # 对数主刻度与格式
+        # Logarithmic major ticks and format
         ax.yaxis.set_major_locator(LogLocator(base=log_base))
         ax.yaxis.set_major_formatter(LogFormatter(base=log_base))
     else:
-        # 线性坐标时也按需限制
+        # Linear coordinates also need constraints
         ax.set_ylim(float(y_min), float(y_max))
 
     plt.grid(True, linestyle="--", linewidth=0.6, alpha=0.6)
@@ -137,7 +137,7 @@ def _plot_missing_rate_score_scatter(missing_rate_score_table_file_path="",
     plt.show()
 
 
-# label的对应关系
+# label mapping relationship
 label_map = {
     "Certain": "Perfect Reporting",
     "Uncertain": "No Reconstruction(PO)",
@@ -165,42 +165,42 @@ plt.rcParams.update(config)
 
 
 def plot_missing_rate_scatter_with_quantiles():
-    """缺失率受到观测缺失比例-持续时间影响，绘制10-90分位图"""
+    """Missing rate is affected by observation missing proportion-duration, plot 10-90 quantile chart"""
     missing_rate_file = "missing_rate_table_high.xlsx"
 
-    # 读取数据
+    # Read data
     df = pd.read_excel(missing_rate_file)
 
-    # 过滤出name为Certain的数据
+    # Filter data where name is Certain
     df_certain = df[df["name"] == "Certain"].copy()
 
-    # 计算平均缺失比例和平均缺失持续时间
+    # Calculate average missing proportion and average missing duration
     df_certain["avg_mask_rate"] = (df_certain["mask_rate_up"] + df_certain["mask_rate_down"]) / 2
     df_certain["avg_mask_duration"] = (df_certain["mask_duration_up"] + df_certain["mask_duration_down"]) / 2
 
-    # 按照平均缺失持续时间分组
+    # Group by average missing duration
     duration_groups = df_certain.groupby("avg_mask_duration")
 
-    # 创建图形
+    # Create figure
     fig, ax = plt.subplots(figsize=(12, 8))
 
-    # 获取颜色映射 - 使用viridis表示持续时间
+    # Get color mapping - use viridis for duration
     cmap = get_cmap("viridis")
 
-    # 获取所有唯一的持续时间值并排序
+    # Get all unique duration values and sort
     durations = sorted(df_certain["avg_mask_duration"].unique())
 
-    # 为每个持续时间分配颜色
+    # Assign color for each duration
     norm_durations = [(d - min(durations)) / (max(durations) - min(durations))
                       if max(durations) > min(durations) else 0.5 for d in durations]
     colors = [cmap(norm) for norm in norm_durations]
 
-    # 绘制每个持续时间的折线和分位带
+    # Plot lines and quantile bands for each duration
     lines = []
     labels = []
 
     for i, (duration, group) in enumerate(duration_groups):
-        # 按照平均缺失比例分组，计算每个组的统计量
+        # Group by average missing proportion, calculate statistics for each group
         grouped_stats = group.groupby("avg_mask_rate")["missing_rate"].agg([
             ('mean', 'mean'),
             ('p10', lambda x: np.percentile(x, 10)),
@@ -208,26 +208,26 @@ def plot_missing_rate_scatter_with_quantiles():
             ('count', 'count')
         ]).reset_index()
 
-        # 按照平均缺失比例排序
+        # Sort by average missing proportion
         grouped_stats = grouped_stats.sort_values("avg_mask_rate")
 
-        # 提取数据
+        # Extract data
         x = grouped_stats["avg_mask_rate"]
         mean = grouped_stats["mean"]
         p10 = grouped_stats["p10"]
         p90 = grouped_stats["p90"]
         count = grouped_stats["count"]
 
-        # 绘制10-90分位带
+        # Plot 10-90 quantile band
         ax.fill_between(
             x, p10, p90,
             color=colors[i],
-            alpha=0.15,  # 较低的透明度，避免遮盖其他线条
+            alpha=0.15,  # Lower transparency to avoid obscuring other lines
             edgecolor='none',
             label=f'Duration={duration:.0f} (10-90%)'
         )
 
-        # 绘制均值折线
+        # Plot mean line
         line, = ax.plot(
             x, mean,
             marker='o',
@@ -237,10 +237,10 @@ def plot_missing_rate_scatter_with_quantiles():
             label=f"Duration={duration:.0f} (Mean)"
         )
 
-        # 在某些点上标记数据数量（可选）
-        # 选择几个点标记数据数量
+        # Mark data count on some points (optional)
+        # Select a few points to mark data count
         if len(x) > 0:
-            # 标记第一个点
+            # Mark the first point
             ax.annotate(f'n={count.iloc[0]}',
                         xy=(x.iloc[0], mean.iloc[0]),
                         xytext=(5, 5), textcoords='offset points',
@@ -249,16 +249,16 @@ def plot_missing_rate_scatter_with_quantiles():
         lines.append(line)
         labels.append(f"Duration={duration:.0f}")
 
-    # 设置图表属性
+    # Set chart properties
     ax.set_xlabel("Average Missing Proportion")
     # ax.set_ylabel("Missing Rate")
     ax.set_ylabel(r"$MR_{\mathbf{obs}}$")
 
-    # 添加网格
+    # Add grid
     ax.grid(True, linestyle="--", alpha=0.4)
 
-    # 设置图例 - 简化版本，避免太多图例项
-    # 只显示均值线的图例
+    # Set legend - simplified version to avoid too many legend items
+    # Only show mean line legend
     from matplotlib.lines import Line2D
     legend_elements = []
     for i, duration in enumerate(durations):
@@ -278,16 +278,16 @@ def plot_missing_rate_scatter_with_quantiles():
               fontsize=20,
               title="Average Missing Duration")
 
-    # 设置坐标轴范围
-    # ax.set_xlim(-0.02, 1.02)  # 稍微扩展一下x轴范围
-    ax.set_xlim(-0.001, 1)  # 稍微扩展一下x轴范围
+    # Set axis range
+    # ax.set_xlim(-0.02, 1.02)  # Slightly expand x-axis range
+    ax.set_xlim(-0.001, 1)  # Slightly Expand x-axis range
 
-    # 确保y轴从0开始，但要考虑分位带的上限
+    # Ensure y-axis starts from 0, but consider the upper bound of quantile band
     y_max = df_certain["missing_rate"].max() * 1.15
-    # ax.set_ylim(-0.001, y_max)  # 留出15%的空间
-    ax.set_ylim(-0.001, 1)  # 留出15%的空间
+    # ax.set_ylim(-0.001, y_max)  # Leave 15% space
+    ax.set_ylim(-0.001, 1)  # Leave 15% space
 
-    # # 添加说明文本
+    # # Add explanatory text
     # ax.text(0.02, 0.98,
     #         "Shaded areas represent 10-90 percentile ranges\nPoints show mean values",
     #         transform=ax.transAxes,
@@ -297,71 +297,71 @@ def plot_missing_rate_scatter_with_quantiles():
 
     plt.tight_layout()
 
-    # 保存图表
-    output_path = "./缺失率_比例_持续时间_分位图.png"
+    # Save figure
+    output_path = "./missing_rate_proportion_duration_quantile_chart.png"
     plt.savefig(output_path, dpi=300, bbox_inches="tight")
     plt.show()
 
-    print(f"图表已保存至: {output_path}")
+    print(f"Figure saved to: {output_path}")
 
-    # 输出详细的统计信息
-    print("\n详细统计信息:")
-    print(f"数据总数: {len(df_certain)}")
-    print(f"不同的持续时间数量: {len(durations)}")
-    print(f"持续时间范围: {min(durations):.0f} - {max(durations):.0f}")
+    # Output detailed statistics
+    print("\nDetailed statistics:")
+    print(f"Total data: {len(df_certain)}")
+    print(f"Number of different durations: {len(durations)}")
+    print(f"Duration range: {min(durations):.0f} - {max(durations):.0f}")
 
-    # 为每个持续时间输出统计信息
-    print("\n各持续时间组统计:")
+    # Output statistics for each duration
+    print("\nStatistics by duration group:")
     for i, (duration, group) in enumerate(duration_groups):
-        print(f"\n持续时间 {duration:.0f}:")
-        print(f"  数据点数量: {len(group)}")
-        print(f"  平均缺失率: {group['missing_rate'].mean():.6f}")
-        print(f"  缺失率范围: {group['missing_rate'].min():.6f} - {group['missing_rate'].max():.6f}")
-        print(f"  标准差: {group['missing_rate'].std():.6f}")
+        print(f"\nDuration {duration:.0f}:")
+        print(f"  Number of data points: {len(group)}")
+        print(f"  Average missing rate: {group['missing_rate'].mean():.6f}")
+        print(f"  Missing rate range: {group['missing_rate'].min():.6f} - {group['missing_rate'].max():.6f}")
+        print(f"  Standard deviation: {group['missing_rate'].std():.6f}")
 
 def plot_missing_rate_scatter():
-    """缺失率受到观测缺失比例-持续时间影响"""
+    """Missing rate is affected by observation missing proportion-duration"""
     missing_rate_file = "missing_rate_table_high.xlsx"
 
-    # 读取数据
+    # Read data
     df = pd.read_excel(missing_rate_file)
 
-    # 过滤出name为Certain的数据
+    # Filter data where name is Certain
     df_certain = df[df["name"] == "Certain"].copy()
 
-    # 计算平均缺失比例和平均缺失持续时间
+    # Calculate average missing proportion and average missing duration
     df_certain["avg_mask_rate"] = (df_certain["mask_rate_up"] + df_certain["mask_rate_down"]) / 2
     df_certain["avg_mask_duration"] = (df_certain["mask_duration_up"] + df_certain["mask_duration_down"]) / 2
 
-    # 按照平均缺失持续时间分组
+    # Group by average missing duration
     duration_groups = df_certain.groupby("avg_mask_duration")
 
-    # 创建图形
+    # Create figure
     fig, ax = plt.subplots(figsize=(10, 6))
 
-    # 获取颜色映射 - 使用viridis表示持续时间
+    # Get color mapping - use viridis for duration
     cmap = get_cmap("viridis")
 
-    # 获取所有唯一的持续时间值并排序
+    # Get all unique duration values and sort
     durations = sorted(df_certain["avg_mask_duration"].unique())
 
-    # 为每个持续时间分配颜色
+    # Assign color for each duration
     norm_durations = [(d - min(durations)) / (max(durations) - min(durations))
                       if max(durations) > min(durations) else 0.5 for d in durations]
     colors = [cmap(norm) for norm in norm_durations]
 
-    # 绘制每个持续时间的折线
+    # Plot lines for each duration
     lines = []
     labels = []
 
     for i, (duration, group) in enumerate(duration_groups):
-        # 按照平均缺失比例排序并计算每个缺失比例下的平均缺失率
+        # Sort by average missing proportion and calculate mean missing rate for each proportion
         group_sorted = group.sort_values("avg_mask_rate")
 
-        # 对相同的平均缺失比例取均值（处理重复实验）
+        # Take mean for same average missing proportion (handle repeated experiments)
         agg_data = group_sorted.groupby("avg_mask_rate")["missing_rate"].mean().reset_index()
 
-        # 绘制折线
+        # Plot line
         line, = ax.plot(
             agg_data["avg_mask_rate"],
             agg_data["missing_rate"],
@@ -375,24 +375,24 @@ def plot_missing_rate_scatter():
         lines.append(line)
         labels.append(f"Duration={duration:.0f}")
 
-    # 设置图表属性
+    # Set chart properties
     ax.set_xlabel("Average Missing Proportion", fontsize=14)
     ax.set_ylabel("Missing Rate", fontsize=14)
     ax.set_title("Missing Rate vs Average Missing Proportion\nfor Different Missing Durations", fontsize=16, pad=15)
 
-    # 添加网格
+    # Add grid
     ax.grid(True, linestyle="--", alpha=0.6)
 
-    # 设置图例
+    # Set legend
     ax.legend(frameon=True, framealpha=0.9, loc="best", fontsize=12)
 
-    # 设置坐标轴范围
+    # Set axis range
     ax.set_xlim(0, 1)
-    ax.set_ylim(0, df_certain["missing_rate"].max() * 1.1)  # 留出10%的空间
+    ax.set_ylim(0, df_certain["missing_rate"].max() * 1.1)  # Leave 10% space
 
-    # 添加颜色条表示持续时间
-    # 由于我们已经使用了图例，颜色条不是必须的，但可以作为备选方案
-    # 如果需要颜色条，可以取消注释下面的代码
+    # Add color bar for duration
+    # Since we already use legend, color bar is not required but can be an alternative
+    # Uncomment the following code if color bar is needed
     """
     sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=min(durations), vmax=max(durations)))
     sm.set_array([])
@@ -402,33 +402,33 @@ def plot_missing_rate_scatter():
 
     plt.tight_layout()
 
-    # 保存图表
-    output_path = "./缺失率_比例_持续时间.png"
+    # Save figure
+    output_path = "./missing_rate_proportion_duration.png"
     plt.savefig(output_path, dpi=300, bbox_inches="tight")
     plt.show()
 
-    print(f"图表已保存至: {output_path}")
+    print(f"Figure saved to: {output_path}")
 
-    # 输出一些统计信息
-    print("\n统计信息:")
-    print(f"数据总数: {len(df_certain)}")
-    print(f"不同的持续时间数量: {len(durations)}")
-    print(f"不同的缺失比例数量: {len(df_certain['avg_mask_rate'].unique())}")
-    print(f"缺失率范围: {df_certain['missing_rate'].min():.6f} - {df_certain['missing_rate'].max():.6f}")
+    # Output some statistics
+    print("\nStatistics:")
+    print(f"Total data: {len(df_certain)}")
+    print(f"Number of different durations: {len(durations)}")
+    print(f"Number of different missing proportions: {len(df_certain['avg_mask_rate'].unique())}")
+    print(f"Missing rate range: {df_certain['missing_rate'].min():.6f} - {df_certain['missing_rate'].max():.6f}")
 
 
 if __name__ == "__main__":
     # _plot_missing_rate_score_scatter("./missing_rate_table_high.xlsx",
-    #                                  output_path="./缺失率_Score_high.png")
+    #                                  output_path="./missing_rate_Score_high.png")
     #
     # _plot_missing_rate_predict_rmse_scatter("./missing_rate_table_high.xlsx",
-    #                                  output_path="./缺失率_RMSE_high.png")
+    #                                  output_path="./missing_rate_RMSE_high.png")
     #
     # _plot_missing_rate_score_scatter("./missing_rate_table_low.xlsx",
-    #                                  output_path="./缺失率_Score_low.png")
+    #                                  output_path="./missing_rate_Score_low.png")
     #
     # _plot_missing_rate_predict_rmse_scatter("./missing_rate_table_low.xlsx",
-    #                                         output_path="./缺失率_RMSE_low.png")
+    #                                         output_path="./missing_rate_RMSE_low.png")
 
     # plot_missing_rate_scatter()
     plot_missing_rate_scatter_with_quantiles()

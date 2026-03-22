@@ -31,7 +31,7 @@ class Normalization:
 
     def __call__(self, x, update=True):
         original_shape = x.shape
-        x = x.view(-1, original_shape[-2], original_shape[-1]) # 融合 B, L
+        x = x.view(-1, original_shape[-2], original_shape[-1])  # Flatten B, L
         # Ensure input tensor has at least 3 dimensions
         if len(original_shape) < 3:
             raise ValueError(f"Expected input with at least 3 dimensions, got {len(original_shape)}.")
@@ -44,7 +44,7 @@ class Normalization:
 
     def get_original(self, x):
         original_shape = x.shape
-        x = x.view(-1, original_shape[-2], original_shape[-1])  # 融合 B, L
+        x = x.view(-1, original_shape[-2], original_shape[-1])  # Flatten B, L
         x = (x * self.running_ms.std) + self.running_ms.mean
         return x.view(original_shape)
 
@@ -55,16 +55,15 @@ class Normalization:
         print('Saved normalization parameters to', dir + '/' + filename)
 
     def load(self, dir, filename='state_norm.pth'):
-        """加载归一化参数"""
+        """Load normalization parameters."""
 
-        # 加载模型文件时，检查是否有 CUDA 可用
         filepath = dir + '/' + filename
-        if torch.cuda.is_available() and "cuda" in self.device_name:  # 如果有 GPU
+        if torch.cuda.is_available() and "cuda" in self.device_name:
             state_dict = torch.load(filepath)
-        else:  # 如果没有 GPU，强制加载到 CPU
+        else:  # Load to CPU if no GPU
             state_dict = torch.load(filepath, map_location=torch.device('cpu'))
 
-        # 更新归一化参数
+        # Update normalization parameters
         self.running_ms.mean = state_dict['mean']
         self.running_ms.std = state_dict['std']
 

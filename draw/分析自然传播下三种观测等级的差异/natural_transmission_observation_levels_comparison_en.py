@@ -1,5 +1,5 @@
 """
-目的：用90分位线展示观测不完备时，观测数值的抖动？与之对应的是，完备上报观测时，观测数据与真实数值的趋势完全一致。
+Purpose: Use 90th percentile lines to show the fluctuation of observation values when observation is incomplete. In contrast, when perfect reporting observation is used, the observation data trend is completely consistent with the true values.
 """
 
 import geopandas as gpd
@@ -42,11 +42,11 @@ def _plot_three_level_compare(
     save_path: str,
 ):
     """
-    输入：
-        - 三个二维数组，形状 (num_seeds, time_steps)
-    功能：
-        - 对每个数组沿种子维做均值与 10/90 分位
-        - 绘制均值曲线 + 10–90 分位带
+    Input:
+        - Three 2D arrays, shape (num_seeds, time_steps)
+    Function:
+        - Calculate mean and 10/90 quantiles for each array along seed dimension
+        - Plot mean curve + 10-90 quantile band
     """
     def _band_stats(arr):
         mean = np.nanmean(arr, axis=0)
@@ -63,15 +63,15 @@ def _plot_three_level_compare(
 
     fig, ax = plt.subplots(figsize=(7, 5))
 
-    # 真实状态：黑色
+    # True state: black
     ax.fill_between(x, true_p10, true_p90, color="blue", alpha=0.12)
     ax.plot(x, true_mean, label="Fully observable", linewidth=2, color="blue")
 
-    # 完备上报：天蓝
+    # Perfect reporting: sky blue
     ax.fill_between(x, perf_p10, perf_p90, color="orange", alpha=0.25)
     ax.plot(x, perf_mean, label="Steady partially obs.", linewidth=2.0, color="orange")
 
-    # 部分上报：浅蓝（或婴儿蓝）
+    # Partial reporting: light blue (or baby blue)
     ax.fill_between(x, part_p10, part_p90, color=light_blue, alpha=0.25)
     ax.plot(x, part_mean, label="Non-steady partially obs.", linewidth=2.0, color=light_blue)
 
@@ -91,7 +91,7 @@ def _plot_three_level_compare(
     plt.show()
 
 def plot_observation_levels_compare():
-    # 读取数据，计算三个观测等级下的观测数据
+    # Load data, calculate observation data at three observation levels
     simRes = np.load("data/simRes1.npy")
     perfect_obs = np.load("data/perfect_obs.npy")
     partial_obs = np.load("data/partial_obs.npy")
@@ -101,13 +101,13 @@ def plot_observation_levels_compare():
     perfect_obs = perfect_obs[:, :, :, 0]
     partial_obs = partial_obs[:, :, :, 0]
 
-    # 绘制整体的
+    # Plot overall
     true_state_overall = true_state.sum(axis=-1)
     perfect_obs_overall = perfect_obs.sum(axis=-1)
     partial_obs_overall = partial_obs.sum(axis=-1)
     _plot_three_level_compare(true_state_overall, perfect_obs_overall, partial_obs_overall,
                               title="Overall", save_path="figure/overall_en.png")
-    # 绘制某一个区域的
+    # Plot a specific region
     for idx in [359, 363]:
         _plot_three_level_compare(true_state[:, :, idx], perfect_obs[:, :, idx], partial_obs[:, :, idx],
                               title=f"Region {idx}", save_path=f"figure/region_{idx}_en.png")
@@ -121,8 +121,8 @@ def plot_community_geo_ax(ax, gdf, color_grade, show_legend=False, legend_title=
     bins = [float(b) for b in color_grade]
     bins_eps = [b + 1e-10 for b in bins]
 
-    # 生成图例标签
-    # 采用左开右闭区间的描述，更贴合 mapclassify.UserDefined 的行为
+    # Generate legend labels
+    # Use left-open right-closed interval description, more consistent with mapclassify.UserDefined behavior
     legend_labels = []
     legend_labels.append(f"≤ {int(bins[0]) if bins[0].is_integer() else bins[0]}")
     for i in range(1, len(bins)):
@@ -135,7 +135,7 @@ def plot_community_geo_ax(ax, gdf, color_grade, show_legend=False, legend_title=
         legend_labels.append(f"({_fmt(lo)}, {_fmt(hi)}]")
     legend_labels.append(f"> {int(bins[-1]) if bins[-1].is_integer() else bins[-1]}")
 
-    # 绘图
+    # Plot
     plotted = gdf.plot(
         column='value',
         # cmap='RdYlGn_r',
@@ -149,26 +149,26 @@ def plot_community_geo_ax(ax, gdf, color_grade, show_legend=False, legend_title=
         linewidth=0.5
     )
 
-    # 绘制比例尺
+    # Draw scale bar
     if show_legend:
         add_scalebar(ax, gdf, length_km=20, where=(0.35, 0.03), fontsize=16)
         # add_north(ax)
 
-    # 图例微调：位置、去边框、替换文字、方块标记
+    # Legend adjustment: position, remove border, replace text, square markers
     leg = ax.get_legend()
     if leg is not None:
-        # 1.2在1的基础上向右偏，1.1在1的基础上向上偏
+        # 1.2 shifts right from 1, 1.1 shifts up from 1
         leg.set_bbox_to_anchor((1.3, 1), transform=ax.transAxes)
         leg.set_frame_on(False)
-        # 替换文本
+        # Replace text
         for text, label in zip(leg.get_texts(), legend_labels):
             text.set_text(label)
-        # 方块标记
+        # Square markers
         for h in leg.legendHandles:
             h.set_marker('s')
             h.set_markersize(10)
 
-    # 视觉优化：去轴、去边框、等比
+    # Visual optimization: remove axes, remove border, equal aspect ratio
     ax.set_frame_on(False)
     ax.set_xticks([])
     ax.set_yticks([])
@@ -177,10 +177,10 @@ def plot_community_geo_ax(ax, gdf, color_grade, show_legend=False, legend_title=
     ax.set_aspect('equal')
 
 def output_community_geo3(true_state, perfect_obs, partial_obs, color_grade, output_path):
-    """绘制 完全可观测-完备上报观测-部分可观测 数据"""
-    # 加载地图数据
+    """Plot fully observable - perfect reporting observation - partial observable data"""
+    # Load map data
     gdf = gpd.read_file("../../data/sz/Shenzhen_geo_data/Shenzhen_Community.shp")
-    # 映射关系
+    # Mapping relationship
     mapping = pd.read_csv("../../data/sz/community_654/mapping.csv")
 
     if not os.path.exists(output_path):
@@ -190,20 +190,20 @@ def output_community_geo3(true_state, perfect_obs, partial_obs, color_grade, out
     if "new_E" in output_path:
         legend_title = "New Exposed"
 
-    # 1.真实状态
+    # 1. True state
     fig, axs = plt.subplots(1, 3, figsize=(15, 5))
     true_state_csv = mapping.copy()
     true_state_csv['value'] = true_state[true_state_csv["filtered_idx"].values]
     new_gdf = gdf.merge(true_state_csv, left_on='OBJECTID', right_on='OBJECTID')
     plot_community_geo_ax(axs[0], new_gdf, color_grade, legend_title=legend_title)
 
-    # 2.完备上报观测
+    # 2. Perfect reporting observation
     perfect_obs_csv = mapping.copy()
     perfect_obs_csv['value'] = perfect_obs[perfect_obs_csv["filtered_idx"].values]
     new_gdf = gdf.merge(perfect_obs_csv, left_on='OBJECTID', right_on='OBJECTID')
     plot_community_geo_ax(axs[1], new_gdf, color_grade, legend_title=legend_title)
 
-    # 2.部分可观测
+    # 2. Partial observable
     partial_obs_csv = mapping.copy()
     partial_obs_csv['value'] = partial_obs[partial_obs_csv["filtered_idx"].values]
     new_gdf = gdf.merge(partial_obs_csv, left_on='OBJECTID', right_on='OBJECTID')
@@ -228,7 +228,7 @@ def cal_rmse(pred, target):
     return np.sqrt(np.mean((pred - target) ** 2))
 
 def plot_observation_compare_in_geo():
-    # 读取数据，计算三个观测等级下的观测数据
+    # Load data, calculate observation data at three observation levels
     simRes = np.load("data/simRes1.npy")
     daily_new_E = np.load("data/daily_new_E.npy")
     perfect_obs = np.load("data/perfect_obs.npy")
@@ -236,7 +236,7 @@ def plot_observation_compare_in_geo():
 
 
 
-    # 1. 现存感染者
+    # 1. Current infections
     true_state = simRes[:, :, :, [env.E_undetected, env.E_detected,
                                   env.I_undetected, env.I_detected, env.I_reported]].sum(
         axis=-1)  # (env_count, period, zone_num)
@@ -252,7 +252,7 @@ def plot_observation_compare_in_geo():
         os.makedirs(output_path)
     # output_community_geo3(true_state, perfect_observation, partial_observation, color_grade, output_path)
 
-    # 2. 新增暴露者
+    # 2. New exposed
     true_state = daily_new_E  # (env_count, period, zone_num)
 
     DAY_IDX = 21
@@ -286,112 +286,112 @@ def add_scalebar(ax, gdf, length_km=20, where=(0.35, 0.04),
                  unit="km", unit_on_last_only=True,
                  linewidth=2, fontsize=9, color="k"):
     """
-    在地图上添加比例尺
+    Add scale bar to map
 
-    参数:
-    - ax: matplotlib坐标轴对象
-    - gdf: GeoDataFrame对象
-    - length_km: 比例尺长度（公里）
-    - where: 比例尺位置，相对于地图范围的相对坐标 (x, y)
-    - tick_fracs: 刻度位置（比例值，0到1之间）
-    - tick_labels: 刻度标签，如果为None则自动生成
-    - unit: 单位
-    - unit_on_last_only: 是否只在最后一个刻度显示单位
-    - linewidth: 比例尺线宽
-    - fontsize: 字体大小
-    - color: 颜色
+    Args:
+    - ax: matplotlib axis object
+    - gdf: GeoDataFrame object
+    - length_km: Scale bar length (kilometers)
+    - where: Scale bar position, relative coordinates (x, y) relative to map extent
+    - tick_fracs: Tick positions (ratio values, between 0 and 1)
+    - tick_labels: Tick labels, if None will be auto-generated
+    - unit: Unit
+    - unit_on_last_only: Whether to show unit only on the last tick
+    - linewidth: Scale bar line width
+    - fontsize: Font size
+    - color: Color
     """
 
-    # 不要覆盖传入的 tick_fracs 参数
-    # tick_fracs = (0, 4/8, 1.0)  # 删除这行
+    # Do not override the passed tick_fracs parameter
+    # tick_fracs = (0, 4/8, 1.0)  # Remove this line
 
-    # 自动生成刻度标签
+    # Auto-generate tick labels
     if tick_labels is None:
         labs = []
         for i, f in enumerate(tick_fracs):
             v = length_km * f
 
-            # 处理标签格式
+            # Handle label format
             if unit_on_last_only and i != len(tick_fracs) - 1:
-                # 不是最后一个刻度，不显示单位
+                # Not the last tick, don't show unit
                 if f == 0:
                     labs.append("0")
                 elif f == 0.5:
-                    labs.append(f"{v:.0f}")  # 0.5位置显示10
+                    labs.append(f"{v:.0f}")  # Show 10 at 0.5 position
                 else:
                     labs.append(f"{v:.0f}")
             else:
-                # 最后一个刻度，显示单位
+                # Last tick, show unit
                 if f == 0:
                     labs.append("0")
                 else:
                     labs.append(f"{v:.0f} {unit}")
         tick_labels = labs
 
-    # 获取地图边界
+    # Get map bounds
     minx, miny, maxx, maxy = gdf.total_bounds
 
-    # 计算比例尺起点位置
+    # Calculate scale bar start position
     x0 = minx + where[0] * (maxx - minx)
     y0 = miny + where[1] * (maxy - miny)
 
-    # 计算刻度高度和文本偏移（使用更合理的相对值）
+    # Calculate tick height and text offset (using more reasonable relative values)
     dy = (maxy - miny)
-    # 使用更稳定的计算方法
-    tick_h = dy * 0.03  # 刻度高度为地图高度的0.5%
-    text_off = dy * 0.045  # 文本偏移为地图高度的1.5%
+    # Use more stable calculation method
+    tick_h = dy * 0.03  # Tick height is 0.5% of map height
+    text_off = dy * 0.045  # Text offset is 1.5% of map height
 
-    # 获取坐标系信息
+    # Get coordinate system info
     crs = CRS.from_user_input(gdf.crs) if gdf.crs else None
 
     if crs is not None and crs.is_projected:
-        # 投影坐标系：可以直接使用米
-        # 确保坐标系单位是米
+        # Projected coordinate system: can use meters directly
+        # Ensure coordinate system unit is meters
         if crs.axis_info[0].unit_name == 'metre':
-            L = length_km * 1000.0  # 公里转米
+            L = length_km * 1000.0  # Convert km to meters
         else:
-            # 如果单位不是米，需要转换
-            # 这里简单假设单位是米，实际情况可能需要更复杂的处理
+            # If unit is not meters, need conversion
+            # Here we simply assume unit is meters, actual situation may need more complex handling
             L = length_km * 1000.0
 
-        # 绘制比例尺主线
+        # Plot scale bar main line
         x1 = x0 + L
         ax.plot([x0, x1], [y0, y0], color=color, lw=linewidth, zorder=10)
 
-        # 绘制刻度和标签
+        # Plot ticks and labels
         for frac, lab in zip(tick_fracs, tick_labels):
             xx = x0 + L * float(frac)
-            # 绘制刻度线
+            # Plot tick line
             ax.plot([xx, xx], [y0 - tick_h, y0 + tick_h], color=color, lw=1.5, zorder=10)
-            # 添加刻度标签
+            # Add tick label
             ax.text(xx, y0 - text_off, lab,
                     ha="center", va="top",
                     fontsize=fontsize, color=color, zorder=10)
 
     else:
-        # 地理坐标系（经纬度）：需要进行测地计算
+        # Geographic coordinate system (lat/lon): need geodesic calculation
         geod = Geod(ellps="WGS84")
         lon0, lat0 = float(x0), float(y0)
 
-        # 计算比例尺终点（向东方向）
+        # Calculate scale bar endpoint (eastward direction)
         lon1, lat1, _ = geod.fwd(lon0, lat0, 90, length_km * 1000.0)
 
-        # 绘制比例尺主线
+        # Plot scale bar main line
         ax.plot([lon0, lon1], [lat0, lat0], color=color, lw=linewidth, zorder=10)
 
-        # 绘制刻度和标签
+        # Plot ticks and labels
         for frac, lab in zip(tick_fracs, tick_labels):
-            # 计算每个刻度点的位置
+            # Calculate each tick point position
             loni, lati, _ = geod.fwd(lon0, lat0, 90, length_km * 1000.0 * float(frac))
-            # 绘制刻度线
+            # Plot tick line
             ax.plot([loni, loni], [lat0 - tick_h, lat0 + tick_h], color=color, lw=1.5, zorder=10)
-            # 添加刻度标签
+            # Add tick label
             ax.text(loni, lat0 - text_off, lab,
                     ha="center", va="top",
                     fontsize=fontsize, color=color, zorder=10)
 
-    # 添加比例尺标题（可选）
-    # ax.text(x0, y0 + 2 * tick_h, "比例尺",
+    # Add scale bar title (optional)
+    # ax.text(x0, y0 + 2 * tick_h, "Scale",
     #        ha="left", va="bottom",
     #        fontsize=fontsize, color=color, zorder=10)
 

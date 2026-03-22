@@ -5,79 +5,79 @@ import matplotlib.pyplot as plt
 import networkx as nx
 from shapely.geometry import LineString
 
-# 1. 读取地图文件
+# 1. Read map file
 shp_file = "Shenzhen_Community.shp"
 data = gpd.read_file(shp_file)
 data.sort_values(by="OBJECTID", inplace=True)
-data.reset_index(drop=True, inplace=True)  # 重置索引以确保索引从0开始
+data.reset_index(drop=True, inplace=True)  # Reset index to ensure index starts from 0
 num_areas = len(data)
-print(f"社区数量: {num_areas}")
+print(f"Number of communities: {num_areas}")
 
-# 2. 生成流动矩阵
-# 这里我们生成一个随机的流动矩阵作为示例，您可以根据实际数据替换
-np.random.seed(42)  # 设置随机种子以确保结果可重复
+# 2. Generate flow matrix
+# Here we generate a random flow matrix as an example, you can replace it with actual data
+np.random.seed(42)  # Set random seed to ensure reproducibility
 flow_matrix = np.random.randint(0, 500, size=(num_areas, num_areas))
-np.fill_diagonal(flow_matrix, 0)  # 设置对角线为0，表示自流动为0
-print("流动矩阵示例：")
+np.fill_diagonal(flow_matrix, 0)  # Set diagonal to 0, meaning no self-flow
+print("Flow matrix example:")
 print(flow_matrix)
 
-# 如果您有实际的流动数据，可以直接加载，例如从CSV文件或.npy文件
-# 示例加载方法（请根据实际文件路径和格式调整）：
-# flow_matrix = np.load('flow_matrix.npy')  # 从.npy文件加载
-# 或
+# If you have actual flow data, you can load it directly, for example from CSV file or .npy file
+# Example loading methods (please adjust according to actual file path and format):
+# flow_matrix = np.load('flow_matrix.npy')  # Load from .npy file
+# or
 # flow_df = pd.read_csv("flow_matrix.csv", index_col=0)
 # flow_matrix = flow_df.values
 
-# 3. 设置过滤流量阈值
-flow_threshold = 990  # 小于此流量的连接不绘制
+# 3. Set flow threshold for filtering
+flow_threshold = 990  # Connections with flow less than this value will not be plotted
 
-# 4. 创建一个空的图（Graph）
+# 4. Create an empty graph
 G = nx.Graph()
 
-# 将每个区域作为节点添加到图中
+# Add each region as a node to the graph
 for idx, row in data.iterrows():
-    region_id = idx  # 使用索引作为区域ID
+    region_id = idx  # Use index as region ID
     G.add_node(region_id, geometry=row.geometry)
 
-# 5. 过滤并添加流动边
+# 5. Filter and add flow edges
 for i in range(num_areas):
-    for j in range(i + 1, num_areas):  # 只遍历上三角矩阵，避免重复
-        flow_value = flow_matrix[i, j] + flow_matrix[j, i]  # 双向流量之和
+    for j in range(i + 1, num_areas):  # Only traverse upper triangular matrix to avoid duplicates
+        flow_value = flow_matrix[i, j] + flow_matrix[j, i]  # Sum of bidirectional flow
 
         if flow_value >= flow_threshold:
-            # 在图中添加边，流量作为边的属性
+            # Add edge to graph, flow as edge attribute
             G.add_edge(i, j, weight=flow_value)
-print("过滤后边数：", len(G.edges))
-# 6. 绘制地图
+print("Number of edges after filtering:", len(G.edges))
+# 6. Plot map
 fig, ax = plt.subplots(figsize=(12, 12))
 
-# 绘制地图基础图层
+# Plot base map layer
 data.plot(ax=ax, color='lightblue', edgecolor='black')
 
- # 绘制流动边
+ # Plot flow edges
 for u, v, edge_data in G.edges(data=True):
-    # 获取区域的几何信息
+    # Get region geometry
     u_geom = G.nodes[u]["geometry"]
     v_geom = G.nodes[v]["geometry"]
 
-    # 获取区域的代表点（质心）
+    # Get representative point (centroid) of region
     u_point = u_geom.centroid
     v_point = v_geom.centroid
 
-    # 计算连接两区域的直线
+    # Calculate line connecting two regions
     line = LineString([u_point, v_point])
 
-    # 绘制边，线条的宽度与流量值成正比
+    # Plot edge, line width proportional to flow value
     ax.plot(
         *line.xy,
         color="red",
-        linewidth=edge_data["weight"] / 1000,  # 调整比例因子以适应实际流量范围
+        linewidth=edge_data["weight"] / 1000,  # Adjust scale factor to fit actual flow range
         alpha=0.6
     )
 
-# 设置地图标题和其他参数
-ax.set_title("人口流动地图", fontsize=15)
-plt.axis('off')  # 关闭坐标轴
+# Set map title and other parameters
+ax.set_title("Population Flow Map", fontsize=15)
+plt.axis('off')  # Turn off axis
 
-# 显示地图
+# Display map
 plt.show()

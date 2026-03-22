@@ -12,15 +12,15 @@ from environment.uncertain_seir_vector_v4 import EpidemicModel, action_to_u0, ac
 config = {
  "font.family": "serif",
  "font.serif": ["Times New Roman"],
- "font.size": 28, # 整体趋势-部分-重建
- # "font.size": 22, # 整体趋势-完备-部分
- # "font.size": 25, # action_geo
+    "font.size": 28, # Overall trend-partial-reconstruction
+    # "font.size": 22, # Overall trend-perfect-partial
+    # "font.size": 25, # action_geo
  "axes.unicode_minus": False,
  "mathtext.fontset": "stix",
 }
 plt.rcParams.update(config)
-# plt.rcParams['font.sans-serif'] = ['Arial Unicode MS']  # 设置中文字体
-# plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
+# plt.rcParams['font.sans-serif'] = ['Arial Unicode MS']  # Set Chinese font
+# plt.rcParams['axes.unicode_minus'] = False  # Solve minus display issue
 
 light_blue = '#ADD8E6'    # Light Blue
 sky_blue = '#87CEEB'      # Sky Blue
@@ -54,7 +54,7 @@ def plot_overall_trend(simRes, obs, action, quara_num, output_path, is_rebuild=F
 
     fig, ax1 = plt.subplots(figsize=(28, 6))
     # fig, ax1 = plt.subplots(figsize=(16, 4.5))
-    # --- 左轴：并排柱状图 ---
+    # --- Left axis: side-by-side bar chart ---
     # ax1.bar(days, true_state, width=0.9, alpha=0.5, color="tab:blue", label='True State')
     ax1.bar(days, true_state, width=0.9, alpha=0.5, color="tab:blue", label='Fully observable')
     ax1.bar(days, partial_obs, width=0.9, alpha=0.5, color="tab:orange", label=obs_curve_label)
@@ -64,7 +64,7 @@ def plot_overall_trend(simRes, obs, action, quara_num, output_path, is_rebuild=F
     ax1.grid(axis='y', linestyle=':', linewidth=0.8, alpha=0.6)
     ax1.set_ylim(0, 450)
 
-    # --- 右轴：折线图（比例） ---
+    # --- Right axis: line chart (ratio) ---
     ax2 = ax1.twinx()
     ax2.plot(days, test_ratio, marker='o', label=r'Daily testing level', linewidth=2)
     # ax2.plot(days, quara_ratio, marker='o', label='Quarantine Ratio', linewidth=2)
@@ -73,10 +73,10 @@ def plot_overall_trend(simRes, obs, action, quara_num, output_path, is_rebuild=F
     ax2.yaxis.set_major_formatter(formatter)
     ax2.set_ylim(0, 0.025)
 
-    # 在固定的几个day上画一条竖直的红色虚线
+    # Draw vertical red dashed lines at fixed days
     ax1.vlines(x=[1, 3, 5, 9, 16], ymin=0, ymax=450, linestyles='--', colors='red', alpha=0.5, linewidth=1)
 
-    # --- 合并图例 ---
+    # --- Combine legends ---
     h1, l1 = ax1.get_legend_handles_labels()
     h2, l2 = ax2.get_legend_handles_labels()
     legend = ax1.legend(h1 + h2, l1 + l2, loc='upper right', frameon=True)
@@ -95,7 +95,7 @@ def cal_rmse(pred, target):
 
 
 def main_draw_overall_trend():
-    # # 完备上报观测也绘制一个
+    # # Also plot perfect reporting observation
     # simRes0 = np.load("perfect_report/simRes.npy")
     # perfect_observation = np.load("perfect_report/obs.npy")
     # action0 = np.load("perfect_report/actions.npy")
@@ -105,9 +105,9 @@ def main_draw_overall_trend():
     # #                    obs_curve_label="Perfect Reporting")
     # plot_overall_trend(simRes0, perfect_observation, action0, quara_num0,
     #                    "output_fig/overall_trend_perfect_obs.png",
-    #                    obs_curve_label="稳态部分观测")
+    #                    obs_curve_label="Steady partial observation")
 
-    # 部分可观测绘制一个
+    # Plot partial observable
     simRes1 = np.load("partial_observable/simRes.npy")
     partial_observation = np.load("partial_observable/obs.npy")
     action1 = np.load("partial_observable/actions.npy")
@@ -119,10 +119,10 @@ def main_draw_overall_trend():
                        "output_fig/overall_trend_partial_obs_en.png",
                        obs_curve_label="Non-steady partially observable")
 
-    # 信息重建绘制一个
+    # Plot information reconstruction
     simRes2 = np.load("rebuild_info/simRes.npy")
     rebuild_state = np.load("rebuild_info/rebuild_states.npy")
-    # rebuild_state第2个维度+1
+    # rebuild_state dimension 2 + 1
     shape = list(rebuild_state.shape)
     shape[1] += 1
     rebuild_state_new = np.zeros(shape, dtype=rebuild_state.dtype)

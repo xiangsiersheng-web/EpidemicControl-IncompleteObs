@@ -3,7 +3,7 @@ import argparse
 
 parser = argparse.ArgumentParser("Hyperparameter Setting for PPO-discrete")
 #A_description
-parser.add_argument("--A_description", type=str, default="训练场景描述", help="Algorithm description")
+parser.add_argument("--A_description", type=str, default="Training scenario", help="Algorithm description")
 parser.add_argument("--device_name", type=str, default='cuda:0', help="device_name")
 
 
@@ -42,60 +42,60 @@ parser.add_argument("--experiment_idx", type=int, default=int(4),
                     help="experiment id determining the reward function and save path")
 
 
-# 训练有关参数
+# Training parameters
 parser.add_argument("--simulate_scale", type=str, default='district', help="simulate_scale, district or community")
 parser.add_argument("--local_obs_dim", type=int, default=int(2), help="local state dimension, I R delta_I (action)")
 parser.add_argument("--action_dim", type=int, default=int(10), help="action dimension")
 parser.add_argument("--zone_num", type=int, default=74, help="zone_num")
 parser.add_argument("--WINDOW_SIZE", type=int, default=7, help="window_size")
 parser.add_argument("--state_standard_scale", type=int, default=1e4, help="state_normalized_scale")
-# 状态中是否包含beta,action,toJ
+# State includes beta/action/toJ
 parser.add_argument("--state_contain_beta", type=bool, default=False, help="state_include_beta")
 parser.add_argument("--state_contain_action", type=bool, default=False, help="state_include_action")
 parser.add_argument("--state_contain_toJ", type=bool, default=False, help="state_include_toJ")
-# actor critic 的网络架构
+# Actor-critic network architecture
 parser.add_argument("--actor_critic_model", type=str, default="mlp", help="actor_critic_model")
 
-# 环境初始化参数
+# Environment initialization
 parser.add_argument("--city", type=str, default='sz', help="case")
 parser.add_argument("--R0", type=str, default='high', help="scenario")
 parser.add_argument("--reward_mode", type=int, default=4, help="reward_mode")
-# ODE 有关参数
+# ODE parameters
 parser.add_argument("--ODE_Pm", type=float, default=0.8, help="ODE_Pm")
 parser.add_argument("--ODE_beta", type=float, default=0.8, help="ODE_beta")
 parser.add_argument("--ODE_sigma", type=float, default=1 / 3, help="ODE_sigma")
 parser.add_argument("--ODE_gamma", type=float, default=1 / 7, help="ODE_gamma")
 parser.add_argument("--ODE_period", type=int, default=120, help="ODE_period")
 parser.add_argument("--ODE_zero_threshold", type=float, default=0.0, help="ODE_zero_threshold")
-# 检测资源效率函数
-parser.add_argument("--detection_efficiency_exp_param", type=float, default=0.6, help="检测资源效率函数的指数参数")
-# 是否绘图显示
+# Detection efficiency function
+parser.add_argument("--detection_efficiency_exp_param", type=float, default=0.6, help="Exponential parameter for detection efficiency")
+# Visualization
 parser.add_argument("--show_fig", type=bool, default=False, help="show_fig")
 
-"""环境不确定性有关参数"""
+"""Environment uncertainty parameters"""
 
-parser.add_argument("--eval_before_train_start", type=bool, default=False, help="是否在训练前进行一次评估，除奖励函数消融实验情况下，别的情形不启用")
+parser.add_argument("--eval_before_train_start", type=bool, default=False, help="Evaluate before training (for ablation experiments)")
 
-parser.add_argument("--rl_type", type=str, default="certainty", help="标注RL是否要在非确定环境下训练")
+parser.add_argument("--rl_type", type=str, default="certainty", help="RL training type: certainty or uncertainty")
 
-## 不完全观测
+## Incomplete observation
 parser.add_argument("--I_obs_imperfect", type=bool, default=False, help="I_obs_imperfect")
 parser.add_argument("--use_obs_imperfect", type=bool, default=False, help="use_obs_imperfect")
 # obs_imperfect_up
 parser.add_argument("--obs_imperfect_up", type=float, default=1.0, help="obs_imperfect_up")
 parser.add_argument("--obs_imperfect_down", type=float, default=0.1, help="obs_imperfect_down")
 
-## 环境非稳态
+## Environment non-stationarity
 parser.add_argument("--gather_to_some_region", type=bool, default=False, help="gather_to_some_region")
 
-## 状态转移不确定
-# 传播参数的变化
+## State transition uncertainty
+# Transmission parameter variation
 parser.add_argument("--use_beta_change", type=bool, default=False, help="use_beta_change")
 parser.add_argument("--env_beta_change_rule", type=str, default="none", help="Defines the rule for changing beta over time or space")
 parser.add_argument("--train_beta_change_rule", type=str, default="none", help="Defines the rule for changing beta over time or space")
 parser.add_argument("--test_beta_change_rule", type=str, default="none", help="Defines the rule for changing beta over time or space")
 
-# 动作的不确定
+# Action uncertainty
 parser.add_argument("--use_action_uncertainty", type=bool, default=False, help="use_action_uncertainty")
 
 args, _unknown_args = parser.parse_known_args()

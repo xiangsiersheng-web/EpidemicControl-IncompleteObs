@@ -27,8 +27,8 @@ def plot_community_geo_ax(ax, gdf, color_grade, show_legend=False, legend_title=
     bins = [float(b) for b in color_grade]
     bins_eps = [b + 1e-10 for b in bins]
 
-    # 生成图例标签
-    # 采用左开右闭区间的描述，更贴合 mapclassify.UserDefined 的行为
+    # Generate legend labels
+    # Use left-open right-closed interval description, more consistent with mapclassify.UserDefined behavior
     legend_labels = []
     legend_labels.append(f"≤ {int(bins[0]) if bins[0].is_integer() else bins[0]}")
     for i in range(1, len(bins)):
@@ -41,7 +41,7 @@ def plot_community_geo_ax(ax, gdf, color_grade, show_legend=False, legend_title=
         legend_labels.append(f"({_fmt(lo)}, {_fmt(hi)}]")
     legend_labels.append(f"> {int(bins[-1]) if bins[-1].is_integer() else bins[-1]}")
 
-    # 绘图
+    # Plot
     plotted = gdf.plot(
         column='value',
         # cmap='RdYlGn_r',
@@ -55,21 +55,21 @@ def plot_community_geo_ax(ax, gdf, color_grade, show_legend=False, legend_title=
         linewidth=0.5
     )
 
-    # 图例微调：位置、去边框、替换文字、方块标记
+    # Legend adjustment: position, remove border, replace text, square markers
     leg = ax.get_legend()
     if leg is not None:
-        # 1.2在1的基础上向右偏，1.1在1的基础上向上偏
+        # 1.2 shifts right from 1, 1.1 shifts up from 1
         leg.set_bbox_to_anchor((1.3, 1), transform=ax.transAxes)
         leg.set_frame_on(False)
-        # 替换文本
+        # Replace text
         for text, label in zip(leg.get_texts(), legend_labels):
             text.set_text(label)
-        # 方块标记
+        # Square markers
         for h in leg.legendHandles:
             h.set_marker('s')
             h.set_markersize(10)
 
-    # 视觉优化：去轴、去边框、等比
+    # Visual optimization: remove axes, remove border, equal aspect ratio
     ax.set_frame_on(False)
     ax.set_xticks([])
     ax.set_yticks([])
@@ -79,24 +79,24 @@ def plot_community_geo_ax(ax, gdf, color_grade, show_legend=False, legend_title=
 
 def plot_community_geo(true_state, partial_obs, rebuild_state, color_grade=[0, 1, 2, 3, 4, 5], title=''):
     fig, axs = plt.subplots(1, 3, figsize=(15, 5))
-    # 加载地图数据
+    # Load map data
     gdf = gpd.read_file("../../data/sz/Shenzhen_geo_data/Shenzhen_Community.shp")
-    # 映射关系
+    # Mapping relationship
     mapping = pd.read_csv("../../data/sz/community_654/mapping.csv")
 
-    # 1.真实状态
+    # 1. True state
     true_state_csv = mapping.copy()
     true_state_csv['value'] = true_state[true_state_csv["filtered_idx"].values]
     new_gdf = gdf.merge(true_state_csv, left_on='OBJECTID', right_on='OBJECTID')
     plot_community_geo_ax(axs[0], new_gdf, color_grade)
 
-    # 2.部分可观测
+    # 2. Partial observation
     partial_obs_csv = mapping.copy()
     partial_obs_csv['value'] = partial_obs[partial_obs_csv["filtered_idx"].values]
     new_gdf = gdf.merge(partial_obs_csv, left_on='OBJECTID', right_on='OBJECTID')
     plot_community_geo_ax(axs[1], new_gdf, color_grade)
 
-    # 3.重建状态
+    # 3. Reconstructed state
     rebuild_state_csv = mapping.copy()
     rebuild_state_csv['value'] = rebuild_state[rebuild_state_csv["filtered_idx"].values]
     new_gdf = gdf.merge(rebuild_state_csv, left_on='OBJECTID', right_on='OBJECTID')
@@ -110,12 +110,12 @@ def plot_community_geo(true_state, partial_obs, rebuild_state, color_grade=[0, 1
 
 
 def output_community_geo(true_state, partial_obs, rebuild_state, color_grade, output_path):
-    # 加载地图数据
+    # Load map data
     gdf = gpd.read_file("../../data/sz/Shenzhen_geo_data/Shenzhen_Community.shp")
-    # 映射关系
+    # Mapping relationship
     mapping = pd.read_csv("../../data/sz/community_654/mapping.csv")
 
-    # 1.真实状态
+    # 1. True state
     fig, ax = plt.subplots(figsize=(7, 4))
     true_state_csv = mapping.copy()
     true_state_csv['value'] = true_state[true_state_csv["filtered_idx"].values]
@@ -127,7 +127,7 @@ def output_community_geo(true_state, partial_obs, rebuild_state, color_grade, ou
     plt.savefig(output_path+'/true_state.png', dpi=300)
     plt.show()
 
-    # 2.部分可观测
+    # 2. Partial observation
     fig, ax = plt.subplots(figsize=(7, 4))
     partial_obs_csv = mapping.copy()
     partial_obs_csv['value'] = partial_obs[partial_obs_csv["filtered_idx"].values]
@@ -137,7 +137,7 @@ def output_community_geo(true_state, partial_obs, rebuild_state, color_grade, ou
     plt.savefig(output_path+'/partial_observable.png', dpi=300)
     plt.show()
 
-    # 3.重建状态
+    # 3. Reconstructed state
     fig, ax = plt.subplots(figsize=(7, 4))
     rebuild_state_csv = mapping.copy()
     rebuild_state_csv['value'] = rebuild_state[rebuild_state_csv["filtered_idx"].values]
@@ -159,9 +159,9 @@ def output_community_geo(true_state, partial_obs, rebuild_state, color_grade, ou
 
 
 def output_community_geo2(true_state, partial_obs, rebuild_state, color_grade, output_path):
-    # 加载地图数据
+    # Load map data
     gdf = gpd.read_file("../../data/sz/Shenzhen_geo_data/Shenzhen_Community.shp")
-    # 映射关系
+    # Mapping relationship
     mapping = pd.read_csv("../../data/sz/community_654/mapping.csv")
 
     if not os.path.exists(output_path):
@@ -171,20 +171,20 @@ def output_community_geo2(true_state, partial_obs, rebuild_state, color_grade, o
     if "new_E" in output_path:
         legend_title = "New Exposed"
 
-    # 1.真实状态
+    # 1. True state
     fig, axs = plt.subplots(1, 3, figsize=(15, 5))
     true_state_csv = mapping.copy()
     true_state_csv['value'] = true_state[true_state_csv["filtered_idx"].values]
     new_gdf = gdf.merge(true_state_csv, left_on='OBJECTID', right_on='OBJECTID')
     plot_community_geo_ax(axs[0], new_gdf, color_grade, legend_title=legend_title)
 
-    # 2.部分可观测
+    # 2. Partial observation
     partial_obs_csv = mapping.copy()
     partial_obs_csv['value'] = partial_obs[partial_obs_csv["filtered_idx"].values]
     new_gdf = gdf.merge(partial_obs_csv, left_on='OBJECTID', right_on='OBJECTID')
     plot_community_geo_ax(axs[1], new_gdf, color_grade, legend_title=legend_title)
 
-    # 3.重建状态
+    # 3. Reconstructed state
     rebuild_state_csv = mapping.copy()
     rebuild_state_csv['value'] = rebuild_state[rebuild_state_csv["filtered_idx"].values]
     new_gdf = gdf.merge(rebuild_state_csv, left_on='OBJECTID', right_on='OBJECTID')
@@ -218,7 +218,7 @@ if __name__ == '__main__':
     rebuild2 = np.load("rebuild_info/rebuild_states.npy")
     action2 = np.load("rebuild_info/actions.npy")
 
-    # state1/state2 在第二天应该是一样的
+    # state1/state2 should be the same on the second day
     DAY_INDEX = 7
     true_state1 = state1[0, DAY_INDEX, :]
     true_state2 = state2[0, DAY_INDEX, :]
@@ -226,7 +226,7 @@ if __name__ == '__main__':
         if true_state1[i] != true_state2[i]:
             print(f"region_idx={i}, state not equal")
 
-    # # 新增E
+    # # New E
     # for day in range(5, 10):
     #     true_state = state2[0, day, :]
     #     print(f"day={day}, true_state mean={true_state.mean()} max={true_state.max()}")
@@ -238,7 +238,7 @@ if __name__ == '__main__':
     #     color_grade = [0, 1, 2, 3, 4, 5]
     #     plot_community_geo(true_state, partial_observe, rebuild_state, color_grade, title=f"new E(day={day})")
 
-    # 选择day_idx=7展示
+    # Select day_idx=7 for display
     day=7
     true_state = state2[0, day, :]
     partial_observe = partial_obs[0, day, :, 1]
@@ -247,7 +247,7 @@ if __name__ == '__main__':
     # output_community_geo(true_state, partial_observe, rebuild_state, color_grade, output_path='output_fig/new_E')
     output_community_geo2(true_state, partial_observe, rebuild_state, color_grade, output_path='output_fig/new_E')
 
-    # # 现存I
+    # # Current I
     # print("------------------------------------------------------------------------------------------------")
     # for day in range(5, 10):
     #     true_state = simRes[0, day, :, :][:, [env.E_undetected, env.E_detected,
@@ -261,7 +261,7 @@ if __name__ == '__main__':
     #     color_grade = [0, 1, 2, 3, 4, 5]
     #     plot_community_geo(true_state, partial_observe, rebuild_state, color_grade, title=f"curr I(day={day})")
 
-    # 选择day_idx=8展示
+    # Select day_idx=8 for display
     day = 8
     true_state = simRes[0, day, :, :][:, [env.E_undetected, env.E_detected,
                                               env.I_undetected, env.I_detected, env.I_reported]].sum(axis=-1)
