@@ -13,7 +13,7 @@ from uncertainty.obs_imperfect.main_rebuild import _get_history_padding
 from utils.normalization import Normalization, RewardScaling
 from algorithm.ppo_discrete_gpu import PPO_discrete_gpu
 from environment.uncertain_seir_vector_v4 import EpidemicModel, action_to_u0, action_to_u1
-from uncertainty.obs_imperfect.gru_gnn_model import RebuildGruGNNModel, RebuildGruGNN
+from uncertainty.obs_imperfect.gru_gnn_model_v1 import RebuildGruGNNModel, RebuildGruGNN
 # from uncertainty.obs_imperfect.gru_model import RebuildGruModel, RebuildGru
 from utils.general_functions import mask_params_to_str
 

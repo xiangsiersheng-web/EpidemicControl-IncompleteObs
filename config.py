@@ -98,8 +98,4 @@ parser.add_argument("--test_beta_change_rule", type=str, default="none", help="D
 # 动作的不确定
 parser.add_argument("--use_action_uncertainty", type=bool, default=False, help="use_action_uncertainty")
 
-try:
-    args = parser.parse_args()
-except SystemExit as e:
-    print("命令行参数解析失败，使用默认参数。")
-    args = parser.parse_args(args=[])
+args, _unknown_args = parser.parse_known_args()

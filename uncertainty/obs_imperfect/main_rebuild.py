@@ -309,7 +309,7 @@ def test(trainer, args, agent, state_norm):
 
 
 def main_gru_gnn(args):
-    from uncertainty.obs_imperfect.gru_gnn_model import RebuildGruGNN, RebuildGruGNNModel
+    from uncertainty.obs_imperfect.gru_gnn_model_v1 import RebuildGruGNN, RebuildGruGNNModel
     # args.device_name = 'cpu'
 
     # 初始化一个环境，使用其 OD POP数据，以及action_to_u方法
