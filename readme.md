@@ -104,8 +104,8 @@ The extended SEIQR model distinguishes between observed and unobserved infection
 | Level | Description | Observation Formula |
 |-------|-------------|---------------------|
 | **Fully Observable** | All compartments perfectly observable | I_combined = E_un + E_de + I_un + I_de + I_re |
-| **Steady Partial Observable (SPO)** | Only detected compartments, constant reporting rate | I_combined = E_de + I_de + I_re |
-| **Non-steady Partial Observable (NPO)** | Only detected compartments, spatiotemporally heterogeneous reporting | I_combined = E_de + I_de + I_re (with random P_re) |
+| **Steady Partial Observable (SPO)** | Observation-derived proxy, constant reporting rate | Policy receives a proxy; it does not receive E_un or I_un |
+| **Non-steady Partial Observable (NPO)** | Observation-derived proxy, heterogeneous self-reporting | Same proxy construction as SPO; only P_re is spatiotemporally heterogeneous |
 
 ## State Reconstruction: ODE-DynNet
 
