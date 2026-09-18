@@ -1,0 +1,9 @@
+scenario,window,n_runs
+high,3,100
+high,7,100
+high,14,100
+high,21,100
+low,3,100
+low,7,100
+low,14,100
+low,21,100
