@@ -1,0 +1,11 @@
+{
+  "created_utc": "2026-09-14T19:33:25.694972+00:00",
+  "snapshot": "f8585c5",
+  "bootstrap_seed": 20260915,
+  "bootstrap_repetitions": 5000,
+  "scenarios": [
+    "high",
+    "low"
+  ],
+  "shared_rng_policy": "For each scenario/window, actor/state-norm/predictor are constructed, then the same pre-decoupled-evaluation historical RNG snapshot is restored before historical 100-environment construction."
+}
