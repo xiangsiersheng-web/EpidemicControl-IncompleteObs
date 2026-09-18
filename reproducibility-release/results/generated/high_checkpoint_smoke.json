@@ -1,0 +1,9 @@
+{
+  "scenario": "high",
+  "paradigm": "SPO",
+  "runs": 1,
+  "seed": 3047,
+  "actor": "C:\\Users\\Asus\\PycharmProjects\\EpidemicControl-IncompleteObs\\model\\gpu\\mlp\\high\\sz_4_maxtrainsteps=48000\\ppo_actor18.pth",
+  "mean_C_I": 368.5570068359375,
+  "mean_N_test": 1251331.0
+}

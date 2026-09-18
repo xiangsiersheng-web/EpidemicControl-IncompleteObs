@@ -107,6 +107,8 @@ The extended SEIQR model distinguishes between observed and unobserved infection
 | **Steady Partial Observable (SPO)** | Observation-derived proxy, constant reporting rate | Policy receives a proxy; it does not receive E_un or I_un |
 | **Non-steady Partial Observable (NPO)** | Observation-derived proxy, heterogeneous self-reporting | Same proxy construction as SPO; only P_re is spatiotemporally heterogeneous |
 
+For partial observation, the policy input is an observation-derived proxy: known burden plus a sensitivity correction formed from detected increments `D_E`, `D_I`, and effective detection sensitivities. It is not simply `E_de + I_de + I_re`. NPO and SPO use this same proxy form; only `P_re,i(t)` is spatiotemporally heterogeneous in NPO.
+
 ## State Reconstruction: ODE-DynNet
 
 ODE-DynNet is a hybrid model that integrates **mechanistic ODE constraints** with **data-driven graph-temporal networks**:
@@ -129,15 +131,7 @@ ODE-DynNet is a hybrid model that integrates **mechanistic ODE constraints** wit
    - Processes historical feature sequence
    - Captures epidemic state evolution
 
-### Reconstruction Performance Comparison
-
-| Method | RMSE_global ↓ | RMSE_local ↓ | C_I | Score |
-|--------|--------------|--------------|-----|-------|
-| No Reconstruction | 78.28 | 0.20 | 4,930 | >10,000 |
-| PureODE | 24.50 | 0.57 | 549 | 7.17 |
-| IDW | 32.63 | 0.59 | 653 | 12.91 |
-| GCN-GRU | 29.30 | 0.09 | 1,986 | 15.53 |
-| **ODE-DynNet** | **13.05** | **0.02** | **590** | **4.64** |
+The paper main-table RMSE uses the historical legacy ensemble definition. The aligned v8 window-ablation records and statistics are in `reproducibility-release/results/v8/`; the fixed reconstruction history for the main-table anchor is 7 days, while the RL observation window is always 3. The high GCN-GRU RMSE 29.30 is a preserved historical value and has no compatible new confidence interval.
 
 ## Multi-Agent Reinforcement Learning
 
@@ -220,20 +214,14 @@ UNCERTAIN_EPC_RL/
 pip install torch numpy pandas matplotlib geopandas scikit-learn scipy
 ```
 
-### Training
+### Reproducibility entry points
 
 ```bash
-# Steady Partial Observable (SPO) scenario
-python train_gpu.py --rl_type uncertainty --use_obs_imperfect True --R0 high
-
-# Non-steady Partial Observable (NPO) with reconstruction
-python train_gpu.py --rl_type uncertainty --use_obs_imperfect True \
-                    --use_rebuild True --rebuild_method gnn_gru
-
-# Joint training paradigm
-python train_gpu.py --rl_type uncertainty --use_obs_imperfect True \
-                    --train_paradigm joint
+python reproducibility-release/scripts/smoke_test.py
+python reproducibility-release/scripts/run_checkpoint_evaluation.py --runs 2 --seed 3047 --device cpu
 ```
+
+These commands evaluate fixed published artifacts or postprocess released results; they do not train. See `reproducibility-release/REPRODUCIBILITY.md` for checkpoint paths, output files, and the training-reproduction boundary.
 
 ### Key Hyperparameters
 

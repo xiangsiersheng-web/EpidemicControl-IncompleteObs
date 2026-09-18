@@ -230,10 +230,10 @@ class PPO_discrete_gpu:
         # Load based on device
         if self.device == torch.device("cpu"):
             # Load to CPU
-            self.critic.load_state_dict(torch.load(critic_path, map_location=torch.device('cpu'), weights_only=True))
-            self.actor.load_state_dict(torch.load(actor_path, map_location=torch.device('cpu'), weights_only=True))
+            self.critic.load_state_dict(torch.load(critic_path, map_location=torch.device('cpu')))
+            self.actor.load_state_dict(torch.load(actor_path, map_location=torch.device('cpu')))
         else:
             # Load to GPU
-            self.critic.load_state_dict(torch.load(critic_path, weights_only=True))
-            self.actor.load_state_dict(torch.load(actor_path, weights_only=True))
+            self.critic.load_state_dict(torch.load(critic_path))
+            self.actor.load_state_dict(torch.load(actor_path))
         print("Load RL model from path: ", actor_path)

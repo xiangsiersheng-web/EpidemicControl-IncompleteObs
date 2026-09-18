@@ -13,3 +13,7 @@ python reproducibility-release/scripts/compute_trajectory_statistics.py
 ```
 
 Exact fresh checkpoint evaluation requires the historical main-sequence protocol. Training reproduction is not claimed because the complete data/split/RNG/early-stopping provenance has not been released as one package.
+
+## Scenario availability
+
+The checked public `model/gpu/mlp` tree contains the high-scenario checkpoint path used by `run_checkpoint_evaluation.py`. A corresponding public low-scenario checkpoint was not found in this audit, so low-transmission main-table evaluation is not claimed as directly reproducible from published checkpoints. Producing it requires the public environment and Shenzhen aggregate inputs, the low scenario configuration (`R0=low`, historical low transmission parameters), the matching PPO actor/state norm, and the mapped reconstruction checkpoint; no training command is supplied here.
